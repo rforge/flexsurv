@@ -1,0 +1,22 @@
+Fitted probs for spline.   Fitted survival/ch/haz for all models, given covs and time vector, so can do own plots.
+
+CIs for hazard.
+
+Return data in plot object
+
+ncovs, ncovs (inc cat) included in object
+
+MLE for Poly-Weibull and other poly-hazard models (make generic flexsurvpoly(base="weibull", ncause)  )
+dpqr for poly-hazard, dpolyhaz(base="weibull", ncause)
+
+stable h and H functions
+
+what about LR test against null model?
+
+time dependent hazard ratios, implemented in stpm2.
+
+Implicit constraints in spline parameters - see Andrew Lover's example.
+
+Analytic derivatives of the log-likelihood for use in BFGS optimiser
+
+Put on r-forge.
