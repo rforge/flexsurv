@@ -1,5 +1,16 @@
 -*- text -*-
 
+Version 0.2 (2013-04-??)
+-------------------------
+
+* Confidence intervals can be plotted for fitted survival, hazard or
+  cumulative hazard curves.
+
+* New summary() method for fitted flexsurvreg and flexsurvspline model
+  objects gives fitted survival, cumulative hazard or hazard curves.
+  These are what the plot() method plots. 
+
+
 Version 0.1.5 (2012-08-29)
 -------------------------
 

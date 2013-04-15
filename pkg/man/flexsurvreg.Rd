@@ -207,7 +207,7 @@ fitg
 fitw <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data = ovarian, dist="weibull")
 fitw
 plot(fitg)
-lines(fitw, col="blue")
+lines(fitw, col="blue", lwd.ci=1, lty.ci=1)
 ## Identical AIC, probably not enough data in this simple example for a
 ## very flexible model to be worthwhile. 
 
@@ -221,7 +221,7 @@ custom.llogis <- list(name="llogis",
                       inits=function(t){ c(1, median(t)) })
 fitl <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data = ovarian, dist=custom.llogis)
 fitl
-lines(fitl, col="purple")
+lines(fitl, col.fit="purple", col.ci="purple")
 }
 \keyword{models}
 \keyword{survival}

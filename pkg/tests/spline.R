@@ -6,6 +6,7 @@ data(bc)
 if (0) {
     library(survival)
     library(muhaz)
+    library(mvtnorm)
     for (i in list.files("../R", "*.R$")) 
         source(paste("../R/",i,sep=""))
     bc <- read.table("../data/bc.txt")
@@ -20,31 +21,34 @@ bc$cts <- rnorm(nrow(bc))
 bc$recyrs <- bc$rectime/365
 
 ## Weibull
-spl <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=0)
+spl <- flexsurvspline(Surv(recyrs, censrec) ~ group + foo, data=bc, k=0)
 spl
 spl$loglik  +  sum(log(bc$recyrs[bc$censrec==1])) # OK same as Stata streg , and stpm with hazard = TRUE 
 -2*(spl$loglik  +  sum(log(bc$recyrs[bc$censrec==1])))
+summary(spl)
+summary(spl, type="survival")
+summary(spl, type="cumhaz")
+summary(spl, type="hazard")
 if (interactive()){ 
     plot(spl)
+    plot(spl, ci=TRUE)
     plot(spl, type="cumhaz")
-    plot(spl, type="haz")
+    plot(spl, type="hazard")
+    plot(spl, type="hazard", ci=TRUE)
 }
 
-if (0) {   ## TODO EXTRACT FITTED SURV PROBS FROM MODEL OBJECT. 
-x <- spl                         # REPLACE WITH YOUR FITTED SPLINE MODEL OBJECT
-t <- sort(x$data$Y[,"time"])  # REPLACE WITH THE TIMES YOU WANT THE FITTED SURVIVAL FOR
-X <- c(0,0)                   # REPLACE WITH THE COVARIATE VALUES YOU WANT THE FITTED SURVIVAL FOR
-gamma <- x$res[1:(x$k + 2),"est"]
-ncovs <- ncol(x$data$Xraw)
-beta <- if (ncovs==0) 0 else x$res[(x$k+3):(nrow(x$res)),"est"]
-eta <- flexsurv:::fs.spline(gamma, log(t), x$knots) + as.numeric(X %*% beta)
-surv <- if (x$scale=="hazard") exp(-exp(eta)) else if (x$scale=="odds") 1 / (exp(eta) + 1) else if (x$scale=="normal") pnorm(-eta)
-
-plot(x)
-lines(t, surv, lwd=5)
-
+## Weibull, no covs
+spl <- flexsurvspline(Surv(recyrs, censrec) ~ 1, data=bc, k=0)
+if (interactive()){ 
+    plot(spl)
+    plot(spl, ci=FALSE)
+    plot(spl, type="cumhaz")
+    plot(spl, type="cumhaz", ci=FALSE)
+    plot(spl, type="hazard")
+    plot(spl, type="hazard", ci=FALSE)
 }
 
+summary(survfit(Surv(recyrs, censrec) ~ group, data=bc))
 
 ## Best-fitting model for breast cancer example in paper 
 ## gamma -3.451(0.203), 2.915(0.298), 0.191(0.044) 

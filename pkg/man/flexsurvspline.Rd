@@ -190,7 +190,7 @@ bc$recyrs <- bc$rectime/365
 spl <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=1, scale="odds")
 
 ## Fitted survival 
-plot(spl)
+plot(spl, ci=TRUE, lwd=3, lwd.ci=1, col.ci="gray")
 
 ## Simple Weibull model fits much less well 
 splw <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=0, scale="hazard")

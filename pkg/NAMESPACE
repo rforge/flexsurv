@@ -39,6 +39,8 @@ rgompertz
 importFrom(graphics, plot)
 importFrom(survival, Surv)
 importFrom(survival, survfit)
+importFrom(muhaz, muhaz)
+importFrom(mvtnorm, rmvnorm)
 
 S3method(print, flexsurvreg)
 S3method(plot, flexsurvreg)

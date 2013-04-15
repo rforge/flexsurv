@@ -7,14 +7,16 @@
   model against nonparametric estimates to diagnose goodness-of-fit.
 }
 \usage{
-\method{plot}{flexsurvreg}(x, X=NULL, type="survival", tmax=NULL,
-        est=TRUE, ci=FALSE, cl=0.95,
+\method{plot}{flexsurvreg}(x, X=NULL, type="survival", t=NULL,
+        est=TRUE, ci=NULL, B=1000, cl=0.95,
         col.obs="black", lty.obs=1, lwd.obs=1,
-        col.fit="red", lty.fit=1, lwd.fit=2, add=FALSE,...)
+        col="red", lty=1, lwd=2,
+        col.ci=NULL, lty.ci=2, lwd.ci=NULL,
+        add=FALSE,...)
 }
 \arguments{
 
-  \item{x}{Output from \code{\link{flexsurvreg}}, representing a fitted
+  \item{x}{Output from \code{\link{flexsurvreg}} or \code{\link{flexsurvspline}}, representing a fitted
     survival model object.}
 
   \item{X}{ Matrix of covariate values to produce fitted survival curves
@@ -57,18 +59,28 @@
     options to \code{\link[muhaz]{muhaz}} may sometimes need to be
     passed as arguments to \code{\link{plot.flexsurvreg}} to avoid an error here.
   }
-  \item{tmax}{ Maximum time point on the x-axis. By default, this is the
-    maximum time observed in the data. }
+  \item{t}{ Vector of times to plot fitted values for. }
   \item{est}{ Plot fitted curves (\code{TRUE} or \code{FALSE}.)}
-  \item{ci}{ Plot confidence intervals for fitted curves (\code{TRUE} or \code{FALSE}.)}
+  \item{ci}{ Plot confidence intervals for fitted curves. By default,
+    this is \code{TRUE} if one observed/fitted curve is plotted,
+    and \code{FALSE} if multiple curves are plotted.}
+  \item{B}{Number of simulations controlling accuracy of confidence
+    intervals, as used in \code{\link{summary.flexsurvreg}.}.  Decrease
+    for greater speed at the expense of accuracy. }
   \item{cl}{ Width of confidence intervals, by default 0.95 for 95\% intervals.}
   \item{col.obs}{ Colour of the nonparametric curve. }
   \item{lty.obs}{ Line type of the nonparametric curve. }
   \item{lwd.obs}{ Line width of the nonparametric curve. }
 
-  \item{col.fit}{ Colour of the fitted parametric curve(s). }
-  \item{lty.fit}{ Line type of the fitted parametric curve(s). }
-  \item{lwd.fit}{ Line width of the fitted parametric curve(s). }
+  \item{col}{ Colour of the fitted parametric curve(s). }
+  \item{lty}{ Line type of the fitted parametric curve(s). }
+  \item{lwd}{ Line width of the fitted parametric curve(s). }
+
+  \item{col.ci}{ Colour of the fitted confidence limits, defaulting to the same
+  as for the fitted curve. }
+  \item{lty.ci}{ Line type of the fitted confidence limits. }
+  \item{lwd.ci}{ Line width of the fitted confidence limits, defaulting to the same
+  as for the fitted curve. }
 
   \item{add}{If \code{TRUE}, add lines to an existing plot,
     otherwise new axes are drawn.}

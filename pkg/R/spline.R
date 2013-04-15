@@ -41,17 +41,18 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
         knots <- c(minlogtime, knots, maxlogtime)
     }
     match.arg(scale, c("hazard","odds","normal"))
-    ncovs <- ncol(X)
-    npars <- k + 2 + ncovs
+    ncovs <- ncol(dat$Xraw)
+    ncoveffs <- ncol(X)
+    npars <- k + 2 + ncoveffs
     if (is.null(inits)) {
         inits <- flexsurv.splineinits(Y, X, data, knots, scale)
     }
     else {
-        if (!is.numeric(inits) || length(inits) != k + 2 + ncovs)
-            stop("inits must be a numeric vector of length ", k + 2 + ncovs, ": 2 + ",
-                 k, " knots + ", ncovs, " covariates")
+        if (!is.numeric(inits) || length(inits) != k + 2 + ncoveffs)
+            stop("inits must be a numeric vector of length ", k + 2 + ncoveffs, ": 2 + ",
+                 k, " knots + ", ncoveffs, " covariate effects")
     }
-    cnames <- if(ncovs==0) NULL else colnames(X)
+    cnames <- if(ncoveffs==0) NULL else colnames(X)
     names(inits) <- c(paste("gamma",0:(k+1),sep=""), cnames)
     if (!is.null(fixedpars) && !is.logical(fixedpars) &&
         (!is.numeric(fixedpars) || any(!(fixedpars %in% 1:npars)))){
@@ -82,8 +83,10 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
         res <- cbind(est=inits, lcl=NA, ucl=NA, se=NA)
         res[setdiff(1:npars, fixedpars),] <- cbind(est, lcl, ucl, se)
         colnames(res) <- c("est", paste(c("L","U"), round(cl*100), "%", sep=""), "se")
-        ret <- list(call=match.call(), k=k, knots=knots, scale=scale, res=res,  cov=cov, npars=length(est),
-                    loglik=-opt$value, AIC=2*opt$value + 2*length(est), opt=opt,
+        ret <- list(call=match.call(), k=k, knots=knots, scale=scale, res=res, cov=cov,
+                    npars=length(est), fixedpars=fixedpars, optpars=optpars,
+                    ncovs=ncovs, ncoveffs=ncoveffs, 
+                    loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,
                     data = dat, datameans = colMeans(dat$X),
                     N=nrow(dat$Y), events=sum(dat$Y[,"status"]), trisk=sum(dat$Y[,"time"]))
     }
@@ -185,12 +188,12 @@ fs.dspline <- function(gamma, x, knots){
     dspline
 }
 
-## TODO put in summary function for flexsurvreg object which is a spline.
-psurvspline <- function(q, gamma, beta, knots, scale){
-    eta <- fs.spline(gamma, log(t), knots) + as.numeric(X %*% beta)
-    surv <- if (scale=="hazard") exp(-exp(eta)) else if (scale=="odds") 1 / (exp(eta) + 1) else if (scale=="normal") pnorm(-eta)
-    1 - surv
-}
+## ## TODO put in summary function for flexsurvreg object which is a spline.
+## psurvspline <- function(q, gamma, beta, knots, scale){
+##     eta <- fs.spline(gamma, log(t), knots) + as.numeric(X %*% beta)
+##     surv <- if (scale=="hazard") exp(-exp(eta)) else if (scale=="odds") 1 / (exp(eta) + 1) else if (scale=="normal") pnorm(-eta)
+##     1 - surv
+## }
 
-dsurvspline <- function(){
-}
+## dsurvspline <- function(){
+## }

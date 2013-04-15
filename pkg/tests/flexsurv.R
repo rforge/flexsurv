@@ -3,9 +3,10 @@ library(flexsurv)
 ## for local use 
 if (0) {
     library(survival) 
+    library(mvtnorm)
     library(muhaz)
-    for (i in list.files("../../flexsurv/R", "*.R$")) 
-        source(paste("../../flexsurv/R/",i,sep=""))
+    for (i in list.files("~/work/flexsurv/flexsurv/R", "*.R$")) 
+        source(paste("~/work/flexsurv/flexsurv/R/",i,sep=""))
 }
 
 test <- function(x, y, tol=1e-06) {
@@ -280,7 +281,8 @@ f <- function(){
   if(interactive()) plot(fitg)
   fitg <- flexsurvreg(formula = Surv(ovarian2$futime, ovarian2$fustat) ~ factor(ovarian2$rx), dist="gengamma")
   if(interactive()) print(fitg)
-  plot(fitg)
+  plot(fitg, ci=TRUE)
+  ## nonsense CIs due to flat likelihood around Q 
 }
 f()
 
@@ -288,6 +290,7 @@ fitg <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, dist="ge
 plot(fitg)
 plot(fitg, type="cumhaz")
 plot(fitg, type="hazard", min.time=0, max.time=1000)
+## note can't change the ylim - need to use muhaz manually.
 fitg <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data=ovarian, dist="gengamma")
 plot(fitg)
 
