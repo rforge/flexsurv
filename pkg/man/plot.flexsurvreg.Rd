@@ -25,14 +25,16 @@
     is only one covariate in the model, and we want to plot curves for
     covariate values of 1 and 2.
 
-    For ``factor'' (categorical) covariates, the 0/1 values of the
-    contrasts representing factor levels should be used.  For example,
-    for a covariate \code{agegroup} with levels \code{20-29, 30-39,
-    40-49, 50-59}, and baseline level \code{20-29}, there are three
-    contrasts.  To plot curves for groups \code{20-29} and \code{40-49},
-    supply \code{X = rbind(c(0,0,0), c(0,1,0))}, since all contrasts are
-    zero for the baseline level, and the second contrast is ``turned
-    on'' for the third level \code{40-49}.
+    For ``factor'' (categorical) covariates, the values of the contrasts
+    representing factor levels (as returned by the
+    \code{\link{contrasts}} function) should be used.  For example, for
+    a covariate \code{agegroup} specified as an unordered factor with
+    levels \code{20-29, 30-39, 40-49, 50-59}, and baseline level
+    \code{20-29}, there are three contrasts.  To plot curves for groups
+    \code{20-29} and \code{40-49}, supply \code{X = rbind(c(0,0,0),
+    c(0,1,0))}, since all contrasts are zero for the baseline level, and
+    the second contrast is ``turned on'' for the third level
+    \code{40-49}.
 
     If there are only factor covariates in the model, then Kaplan-Meier
     curves are plotted for all distinct groups, and by default, fitted

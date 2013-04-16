@@ -3,21 +3,20 @@
 Version 0.2 (2013-04-??)
 -------------------------
 
-* Confidence intervals can be plotted for fitted survival, hazard or
-  cumulative hazard curves.
-
 * New summary() method for fitted flexsurvreg and flexsurvspline model
   objects gives fitted survival, cumulative hazard or hazard curves, 
   with confidence intervals mosly computed by a simulation method.  
-  These are what the plot() method plots. 
+
+* This allows confidence intervals to be plotted for the fitted
+  survival, hazard or cumulative hazard curves.
+
+* New psurvspline and dsurvspline functions giving distribution and
+  density function for the spline model.
 
 * Force use of BFGS for 1D optimisation, avoiding warnings.
 
 * Work around NaN warnings from spline models due to parameters
   violating implicit constraints.
-
-* New psurvspline and dsurvspline functions giving distribution and
-  density function for the spline model.
 
 
 Version 0.1.5 (2012-08-29)
