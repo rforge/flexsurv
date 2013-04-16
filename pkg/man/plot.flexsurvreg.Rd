@@ -65,7 +65,7 @@
     this is \code{TRUE} if one observed/fitted curve is plotted,
     and \code{FALSE} if multiple curves are plotted.}
   \item{B}{Number of simulations controlling accuracy of confidence
-    intervals, as used in \code{\link{summary.flexsurvreg}.}.  Decrease
+    intervals, as used in \code{\link[=summary.flexsurvreg]{summary}}.  Decrease
     for greater speed at the expense of accuracy. }
   \item{cl}{ Width of confidence intervals, by default 0.95 for 95\% intervals.}
   \item{col.obs}{ Colour of the nonparametric curve. }

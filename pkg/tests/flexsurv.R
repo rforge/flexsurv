@@ -1,11 +1,11 @@
 library(flexsurv)
 
-## for local use 
+## for local use
 if (0) {
-    library(survival) 
+    library(survival)
     library(mvtnorm)
     library(muhaz)
-    for (i in list.files("~/work/flexsurv/flexsurv/R", "*.R$")) 
+    for (i in list.files("~/work/flexsurv/flexsurv/R", "*.R$"))
         source(paste("~/work/flexsurv/flexsurv/R/",i,sep=""))
 }
 
@@ -13,23 +13,23 @@ test <- function(x, y, tol=1e-06) {
     stopifnot(isTRUE(all.equal(x, y, tol=tol)))
 }
 
-### TESTS WITH OVARIAN CANCER DATA FROM survival PACKAGE  
+### TESTS WITH OVARIAN CANCER DATA FROM survival PACKAGE
 
 ## Basic GF fit -- doesn't converge -- "p" par not identifiable
 try(fitf <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf",
                   control=list(trace=1,REPORT=1,maxit=10000,ndeps=rep(1e-06,4))))
-## Basic GG fit 
+## Basic GG fit
 fitg <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, dist="gengamma")
 fitg <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data = ovarian, dist="gengamma")
-## GF with "p" fixed at 0 
+## GF with "p" fixed at 0
 fitffix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf",
                        fixedpars=4, inits=c(NA,NA,NA,1e-05))
 test(fitffix$res[1:3,"est"], fitg$res[1:3,"est"], tol=1e-03)
 test(fitffix$res[1:3,2:3], fitg$res[1:3,2:3], tol=1e-03)
 ## Weibull
-fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, 
+fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
                     data = ovarian, dist="weibull")
-## Weibull with library(survival) 
+## Weibull with library(survival)
 fitws <- survreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
                  data = ovarian, dist="weibull")
 test(fitw$loglik, fitws$loglik[1], tol=1e-04)
@@ -43,7 +43,7 @@ fitgo <- flexsurvreg(formula = Surv(futime, fustat) ~ 1,
                      data = ovarian, dist="gompertz",
                      control=list(trace=1,REPORT=1,reltol=1e-16))
 fitgo
-if (interactive()) { 
+if (interactive()) {
     plot.flexsurvreg(fitf)
     lines.flexsurvreg(fitg, col.fit="blue", lty.fit=2)
     lines.flexsurvreg(fitw, col.fit="green", lty.fit=2)
@@ -54,13 +54,13 @@ if (interactive()) {
 ## Test distributions reducing to others with fixed pars
 fitffix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf",
                        fixedpars=TRUE, inits=c(0,1,0,1))
-## GG = GF with p -> 0 
+## GG = GF with p -> 0
 fitffix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf",
                        fixedpars=TRUE, inits=c(0,1,0,1e-08))
 fitgfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="gengamma",
                        fixedpars=TRUE, inits=c(0,1,0))
 test(fitgfix$loglik, fitffix$loglik, tol=1e-02)
-## Weib = GG with q=1 
+## Weib = GG with q=1
 fitgfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="gengamma",
                        fixedpars=TRUE, inits=c(6,0.8,1))
 fitwfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="weibull",
@@ -72,7 +72,7 @@ fitgfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data 
 fitgafix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="gamma",
                        fixedpars=TRUE, inits=c(1/0.5^2,exp(-6)/0.5^2))
 test(fitgafix$loglik,fitgfix$loglik)
-## Log-normal = GG with q=0 
+## Log-normal = GG with q=0
 fitgfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="gengamma",
                        fixedpars=TRUE, inits=c(6,0.8,0))
 fitlfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="lnorm",
@@ -85,7 +85,7 @@ fitw2 <- survreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovar
 test(1 / fitw2$scale, fitw$res["shape","est"], tol=1e-03)
 test(as.numeric(coef(fitw2)[1]), log(fitw$res["scale","est"]), tol=1e-03)
 
-## try a few optimisations with fixed pars and distributions reducing to others 
+## try a few optimisations with fixed pars and distributions reducing to others
 fitgfix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="gengamma.orig",
                        fixedpars=3, inits=c(NA,NA,1))
 fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="weibull")
@@ -104,7 +104,7 @@ fitw
 
 ## Custom distribution
 ## Log-logistic
-if (is.element("eha", installed.packages()[,1])) { 
+if (is.element("eha", installed.packages()[,1])) {
     library(eha)
     custom.llogis <- list(name="llogis",
                           pars=c("shape","scale"),
@@ -113,8 +113,8 @@ if (is.element("eha", installed.packages()[,1])) {
                           inv.transforms=c(exp, exp),
                           inits=function(t){ c(1, median(t)) })
     fitll <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data = ovarian, dist=custom.llogis)
-    fitll 
-    if (interactive()) { 
+    fitll
+    if (interactive()) {
         lines.flexsurvreg(fitll, col.fit="pink", lty.fit=2)
     }
 }
@@ -128,43 +128,44 @@ custom.llogis <- list(name="llogis",
 fitll <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data = ovarian, dist=custom.llogis)
 
 ## SIMULATION TESTS. Simulate data from r and refit model to test
-if (0) { 
-    sim <- rgenf(3000, 1.5, 1, -0.4, 0.6) 
+set.seed(12082012)
+if (0) {
+    sim <- rgenf(3000, 1.5, 1, -0.4, 0.6)
     dead <- as.numeric(sim<=30)
     simt <- ifelse(sim<=30, sim, 30)
     fit <- flexsurvreg(Surv(simt, dead) ~ 1, dist="genf", control=list(trace=1,REPORT=1))
-    fit$res # OK 
+    fit$res # OK
 
-    sim <- rgengamma(3000, 1.5, 1, -0.4) 
+    sim <- rgengamma(3000, 1.5, 1, -0.4)
     dead <- as.numeric(sim<=30)
     simt <- ifelse(sim<=30, sim, 30)
     fit <- flexsurvreg(Surv(simt, dead) ~ 1, dist="gengamma", control=list(trace=1,REPORT=1))
-    fit$res # OK 
+    fit$res # OK
 
-    sim <- rgenf.orig(3000, 1.5, 1, 0.4, 0.6) 
+    sim <- rgenf.orig(3000, 1.5, 1, 0.4, 0.6)
     dead <- as.numeric(sim<=30)
     simt <- ifelse(sim<=30, sim, 30)
     fit <- flexsurvreg(Surv(simt, dead) ~ 1, dist="genf.orig", control=list(trace=1,REPORT=1,maxit=10000))
-    fit$res # OK 
+    fit$res # OK
 
-    sim <- rgengamma.orig(3000, 1.5, 1, 0.4) 
+    sim <- rgengamma.orig(3000, 1.5, 1, 0.4)
     dead <- as.numeric(sim<=30)
     simt <- ifelse(sim<=30, sim, 30)
     fit <- flexsurvreg(Surv(simt, dead) ~ 1, dist="gengamma.orig", control=list(trace=1,REPORT=1))
-    fit$res # OK 
+    fit$res # OK
 
     xg <- rgompertz(1000, 0.12, 4); hist(xg)
     flexsurvreg(Surv(xg, rep(1,1000)) ~ 1, dist="gompertz") ## OK. robust to starting values
 
-    if (is.element("eha", installed.packages()[,1])) { 
+    if (is.element("eha", installed.packages()[,1])) {
         library(eha)
         foo <- phreg(Surv(xg, rep(1,1000)) ~ 1, dist="gompertz") ## OK - names of parameters other way round, see dgompertz help
         xl <- rllogis(1000, 5.4, 0.1); hist(xl)
         flexsurvreg(Surv(xl, rep(1,1000)) ~ 1, dist=custom.llogis) ## OK. robust to starting values
-    }        
+    }
 }
 
-### TESTS WITH COVARIATES  
+### TESTS WITH COVARIATES
 
 fitg <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ factor(rx), data = ovarian, dist="weibull",
                   method="BFGS", control=list(trace=1,REPORT=1,maxit=10000,ndeps=rep(1e-06,3)))
@@ -178,12 +179,12 @@ if (interactive()) {
 }
 
 x <- rnorm(500,0,1)
-sim <- rgenf(500, 1.5 - 0.2*x, 1, -0.4, 0.6) 
+sim <- rgenf(500, 1.5 - 0.2*x, 1, -0.4, 0.6)
 dead <- as.numeric(sim<=30)
 simt <- ifelse(sim<=30, sim, 30)
 fit <- flexsurvreg(Surv(simt, dead) ~ x, dist="genf", control=list(trace=1,REPORT=1,maxit=10000))
 fit
-if (interactive()) { 
+if (interactive()) {
     plot.flexsurvreg(fit)
     lines.flexsurvreg(fit, X=matrix(c(1,2),nrow=2))
     plot(fit)
@@ -193,6 +194,7 @@ if (interactive()) {
 }
 x2 <- factor(rbinom(500, 1, 0.5))
 fit <- flexsurvreg(Surv(simt, dead) ~ x + x2, dist="genf", control=list(trace=1,REPORT=1,maxit=10000))
+summary(fit) # CIs blow up.
 plot(fit)
 plot(fit, type="cumhaz")
 plot(fit, type="hazard", min.time=0, max.time=25)
@@ -202,7 +204,7 @@ fit <- flexsurvreg(Surv(simt, dead) ~ x2, dist="genf", control=list(trace=1,REPO
 plot(fit)
 
 x3 <- rnorm(500,0,1)
-sim <- rgengamma(500, 1.5 + 2*x3, 1, -0.4) 
+sim <- rgengamma(500, 1.5 + 2*x3, 1, -0.4)
 dead <- as.numeric(sim<=30)
 simt <- ifelse(sim<=30, sim, 30)
 fit <- flexsurvreg(Surv(simt, dead) ~ x3, dist="gengamma", control=list(trace=1,REPORT=1,maxit=10000))
@@ -212,7 +214,7 @@ fit <- flexsurvreg(Surv(simt, dead)[1:100] ~ x[1:100], dist="gengamma", control=
 fit
 
 ## Errors
-if (0) { 
+if (0) {
 try(fitf <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf", inits = c(1,2,3)))
 try(fitf <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf", inits = "foo"))
 try(fitf <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="genf", inits = c(1,2,3,-1)))
@@ -232,44 +234,44 @@ try(fitf <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data
 
 ### OTHER DATASETS (local developer use only)
 
-if (0) { 
+if (0) {
     load("~/work/oral/tcrb.rda")
-    ## Without covs 
+    ## Without covs
     fit <- flexsurvreg(Surv(survtime, dead2) ~ 1, data=tcrb, dist="genf")
     fit.gg <- flexsurvreg(Surv(survtime, dead2) ~ 1, data=tcrb, dist="gengamma")
     fit.sp2 <- flexsurvspline(Surv(survtime, dead2) ~ 1, k=2, data=tcrb, control=list(maxit=10000))
     fit.sp3 <- flexsurvspline(Surv(survtime, dead2) ~ 1, k=3, data=tcrb, control=list(maxit=10000))
     fit.sp4 <- flexsurvspline(Surv(survtime, dead2) ~ 1, k=4, data=tcrb, control=list(maxit=10000))
     fit.sp5 <- flexsurvspline(Surv(survtime, dead2) ~ 1, k=5, data=tcrb, method="BFGS", control=list(trace=1,REPORT=1,maxit=10000))
-    ## min AIC with 4 knots, better than GF 
+    ## min AIC with 4 knots, better than GF
     save(fit, fit.gg, fit.sp2, fit.sp3, fit.sp4, fit.sp5, file="../../tests/tcr.rda")
     plot(fit)
-    lines(fit.gg, col="blue") 
-    lines(fit.sp4, col="green") 
+    lines(fit.gg, col="blue")
+    lines(fit.sp4, col="green")
 
     ## With covs -- can't get arbitrarily good fit unless model 3 way interaction
     fitc.f <- flexsurvreg(Surv(survtime, dead2) ~ age_10 + sex + stage, data=tcrb, dist="genf")
     fitc.g <- flexsurvreg(Surv(survtime, dead2) ~ age_10 + sex + stage, data=tcrb, dist="gengamma")
-    fitc.sp2 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=2, data=tcrb) # doesnt fit as well as gf/gg.  PH assumption vs AFT? 
+    fitc.sp2 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=2, data=tcrb) # doesnt fit as well as gf/gg.  PH assumption vs AFT?
     fitc.sp3 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=3, data=tcrb)
     fitc.sp4 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=4, data=tcrb)
     fitc.spo2 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=2, scale="odds", data=tcrb) # PO doesn't fit better
-    fitc.spn2 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=2, scale="normal", data=tcrb) # normal model is worse 
+    fitc.spn2 <- flexsurvspline(Surv(survtime, dead2) ~ age_10 + sex + stage, k=2, scale="normal", data=tcrb) # normal model is worse
     save(fitc.f, fitc.g, fitc.sp2, fitc.sp3, fitc.sp4, fitc.spo2, fitc.spn2, file="../../tests/tcrcov.rda")
-    ## GF fits best, AFT assumption must be better than PH. 
-    
+    ## GF fits best, AFT assumption must be better than PH.
+
     plot(survfit(Surv(survtime, dead2) ~ stage, data=tcrb, subset=(tcrb$age_10=="50-59" & tcrb$sex=="female")))
     lines(fitc.f, X=rbind(c(1,0,0,0,1,0,0,0),
                   c(1,0,0,0,1,1,0,0),
                   c(1,0,0,0,1,0,1,0),
                   c(1,0,0,0,1,0,0,1)))
-    
+
     fitc.f <- flexsurvreg(Surv(survtime, dead2) ~ stage, data=tcrb, dist="genf")
-    plot(fitc.f)  
+    plot(fitc.f)
     plot(fitc.f, type="hazard", min.time=0, max.time=10)
     plot(survfit(Surv(survtime, dead2) ~ stage, data=tcrb))
     lines(fitc.f, X=rbind(c(0,0,0),c(1,0,0),c(0,1,0),c(0,0,1)))
-} 
+}
 
 ### calling flexsurvreg from within a function
 ### environment bug in early versions
@@ -282,14 +284,14 @@ f <- function(){
   fitg <- flexsurvreg(formula = Surv(ovarian2$futime, ovarian2$fustat) ~ factor(ovarian2$rx), dist="gengamma")
   if(interactive()) print(fitg)
   plot(fitg, ci=TRUE)
-  ## nonsense CIs due to flat likelihood around Q 
+  ## nonsense CIs due to flat likelihood around Q
 }
 f()
 
 fitg <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, dist="gengamma")
 plot(fitg)
 plot(fitg, type="cumhaz")
-plot(fitg, type="hazard", min.time=0, max.time=1000)
+# plot(fitg, type="hazard", min.time=0, max.time=1000)
 ## note can't change the ylim - need to use muhaz manually.
 fitg <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data=ovarian, dist="gengamma")
 plot(fitg)

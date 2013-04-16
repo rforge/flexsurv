@@ -7,7 +7,8 @@ Version 0.2 (2013-04-??)
   cumulative hazard curves.
 
 * New summary() method for fitted flexsurvreg and flexsurvspline model
-  objects gives fitted survival, cumulative hazard or hazard curves.
+  objects gives fitted survival, cumulative hazard or hazard curves, 
+  with confidence intervals mosly computed by a simulation method.  
   These are what the plot() method plots. 
 
 

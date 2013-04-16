@@ -201,8 +201,15 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
     }
     else {
         optpars <- inits[setdiff(1:npars, fixedpars)]
-        opt <- optim(optpars, minusloglik.flexsurv, t=Y[,"time"], dead=Y[,"status"], X=X, dlist=dlist,
-                     inits=inits, fixedpars=fixedpars, hessian=TRUE, ...)
+        optim.args <- list(...)
+        if (is.null(optim.args$method))
+            optim.args$method <- if (length(optpars)==1) "BFGS" else "Nelder-Mead"
+        optim.args <- c(optim.args, list(par=optpars, fn=minusloglik.flexsurv,
+                                         t=Y[,"time"], dead=Y[,"status"], X=X, dlist=dlist,
+                                         inits=inits, fixedpars=fixedpars, hessian=TRUE))
+        opt <- do.call("optim", optim.args)       
+#        opt <- optim(optpars, minusloglik.flexsurv, t=Y[,"time"], dead=Y[,"status"], X=X, dlist=dlist,
+#                     inits=inits, fixedpars=fixedpars, hessian=TRUE, ...)
         est <- opt$par
         if (all(!is.na(opt$hessian)) && all(!is.nan(opt$hessian)) && all(is.finite(opt$hessian)) &&
             all(eigen(opt$hessian)$values > 0))
@@ -236,36 +243,41 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
 
 ### Compute CIs for survival, cumulative hazard and hazard at supplied
 ### times t and covariates X, using random sample of size B from the
-### assumed MVN distribution of MLEs. 
+### assumed MVN distribution of MLEs.
 
 cisumm.flexsurvreg <- function(x, t, X, B=1000, cl=0.95) {
-    if (B<2) stop("B should be an integer, 2 or greater")
-    sim <- matrix(nrow=B, ncol=nrow(x$res))
-    colnames(sim) <- rownames(x$res)
-    sim[,x$optpars] <- rmvnorm(B, x$opt$par, x$cov)
-    sim[,x$fixedpars] <- rep(x$res.t[x$fixedpars,"est"],each=B)
-    ret <- array(dim=c(B, length(t), 3))
-    for (i in 1:B) {
-        pcall <- list(q=t)
-        for (j in x$dlist$pars)
-            pcall[[j]] <- sim[i,j]    
-        beta <- if (x$ncoveffs==0) 0 else sim[i, x$covpars]
-        mupar <- which(x$dlist$pars==x$dlist$location)
-        mu <- pcall[[x$dlist$location]]
-        mu <- mu + X %*% beta
-        for (j in seq(along=x$dlist$pars))
-            pcall[[x$dlist$pars[j]]] <- x$dlist$inv.transforms[[j]](pcall[[x$dlist$pars[j]]])
-        probfn <- paste("p",x$dlist$name,sep="")
-        prob <- do.call(probfn, pcall)   
-        densfn <- paste("d",x$dlist$name,sep="")
-        dcall <- pcall
-        names(dcall)[names(dcall)=="q"] <- "x"
-        dens <- do.call(densfn, dcall)
-        haz <- dens / (1 - prob)
-        ret[i,,] <- cbind(surv=1 - prob, cumhaz=-log(1-prob), haz=dens/(1-prob))
+    if (any(is.na(x$res[,2]))) {
+        ret <- array(NA, dim=c(length(t), 2, 3))
     }
-    ret <- apply(ret, c(2,3), function(x)quantile(x, c((1-cl)/2, 1 - (1-cl)/2), na.rm=TRUE))
-    ret <- aperm(ret, c(2,1,3))
+    else {
+        ret <- array(dim=c(B, length(t), 3))
+        if (B<2) stop("B should be an integer, 2 or greater")
+        sim <- matrix(nrow=B, ncol=nrow(x$res))
+        colnames(sim) <- rownames(x$res)
+        sim[,x$optpars] <- rmvnorm(B, x$opt$par, x$cov)
+        sim[,x$fixedpars] <- rep(x$res.t[x$fixedpars,"est"],each=B)
+        for (i in 1:B) {
+            pcall <- list(q=t)
+            for (j in x$dlist$pars)
+                pcall[[j]] <- sim[i,j]
+            beta <- if (x$ncoveffs==0) 0 else sim[i, x$covpars]
+            mupar <- which(x$dlist$pars==x$dlist$location)
+            mu <- pcall[[x$dlist$location]]
+            mu <- mu + X %*% beta
+            for (j in seq(along=x$dlist$pars))
+                pcall[[x$dlist$pars[j]]] <- x$dlist$inv.transforms[[j]](pcall[[x$dlist$pars[j]]])
+            probfn <- paste("p",x$dlist$name,sep="")
+            prob <- do.call(probfn, pcall)
+            densfn <- paste("d",x$dlist$name,sep="")
+            dcall <- pcall
+            names(dcall)[names(dcall)=="q"] <- "x"
+            dens <- do.call(densfn, dcall)
+            haz <- dens / (1 - prob)
+            ret[i,,] <- cbind(surv=1 - prob, cumhaz=-log(1-prob), haz=dens/(1-prob))
+        }
+        ret <- apply(ret, c(2,3), function(x)quantile(x, c((1-cl)/2, 1 - (1-cl)/2), na.rm=TRUE))
+        ret <- aperm(ret, c(2,1,3))
+    }
     dimnames(ret)[[3]] <- c("surv","cumhaz","haz")
     ret
 }
@@ -323,7 +335,13 @@ summary.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, B=1000, cl=0
         if (!all(isfac))
             X <- matrix(colMeans(dat$X) ,nrow=1)
         ## else calculate for all different factor groupings
-        else X <- unique(dat$X)
+        else {
+            X <- unique(dat$X)
+            ## build names like "COVA=value1,COVB=value2"
+            nam <- as.matrix(unique(dat$Xraw))
+            for (i in 1:ncol(nam)) nam[,i] <- paste(colnames(nam)[i], nam[,i], sep="=")
+            rownames(X) <- apply(nam, 1, paste, collapse=",")
+        }
     }
     else if (is.null(X)) X <- as.matrix(0, nrow=1, ncol=max(ncol(dat$X),1))
     if (is.null(t))
@@ -345,12 +363,7 @@ summary.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, B=1000, cl=0
     }
     dlist <- x$dlist
     ret <- vector(nrow(X), mode="list")
-    ## build names for elements of returned list from unique combinations of factor levels
-    if (nrow(X) > 1) { 
-        nam <- as.matrix(unique(dat$Xraw))
-        for (i in 1:ncol(nam)) nam[,i] <- paste(colnames(nam)[i], nam[,i], sep="=")
-        names(ret) <- apply(nam, 1, paste, collapse=",")
-    }
+    names(ret) <- rownames(X)
     for (i in 1:nrow(X)) {
         if (is.null(x$knots)) {
             for (j in dlist$pars)
@@ -362,7 +375,7 @@ summary.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, B=1000, cl=0
             probfn <- paste("p",dlist$name,sep="")
             prob <- do.call(probfn, pcall)
             res.ci <- cisumm.flexsurvreg(x, t, X[i,], B=B, cl=cl)
-            if (type=="survival") { 
+            if (type=="survival") {
                 y <- 1 - prob
                 ly <- res.ci[,1,"surv"]
                 uy <-  res.ci[,2,"surv"]
@@ -380,7 +393,7 @@ summary.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, B=1000, cl=0
                 y <- dens / (1 - prob)
                 ly <- res.ci[,1,"haz"]
                 uy <-  res.ci[,2,"haz"]
-            }            
+            }
         }
         else {
             eta <- fs.spline(gamma, log(t), x$knots) + as.numeric(X[i,] %*% beta)
@@ -416,7 +429,7 @@ plot.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL,
                              col="red",lty=1,lwd=2,
                              col.ci=NULL,lty.ci=2,lwd.ci=NULL,
                              add=FALSE,...)
-{    
+{
     type <- match.arg(type, c("survival","cumhaz","hazard"))
     summ <- summary.flexsurvreg(x, X=X, type=type, t=t, B=B, cl=cl)
     t <- summ[[1]]$time

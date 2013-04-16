@@ -19,7 +19,7 @@
     survival model object.}
   \item{X}{Matrix of covariate values to produce fitted curves
     for, as described in \code{\link{plot.flexsurvreg}}. }
-  \item{type}{ \code{"survival"} for survival, 
+  \item{type}{ \code{"survival"} for survival,
     \code{"cumhaz"} for cumulative hazard, or \code{"hazard"} for
     hazard, as in \code{\link{plot.flexsurvreg}}.
   }
@@ -27,7 +27,7 @@
   \item{est}{ Plot fitted curves (\code{TRUE} or \code{FALSE}.)}
   \item{ci}{ Plot confidence intervals for fitted curves.}
   \item{B}{Number of simulations controlling accuracy of confidence
-    intervals, as used in \code{\link{summary.flexsurvreg}.}}
+    intervals, as used in \code{\link[=summary.flexsurvreg]{summary}}.}
   \item{cl}{ Width of confidence intervals, by default 0.95 for 95\% intervals.}
 
   \item{col}{ Colour of the fitted curve(s). }
