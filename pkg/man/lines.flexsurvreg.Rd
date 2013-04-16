@@ -10,8 +10,8 @@
 }
 \usage{
 \method{lines}{flexsurvreg}(x, X=NULL, type="survival", t=NULL,
-                              est=TRUE, ci=NULL, B=1000, cl=0.95,
-        col="red", lty=1, lwd=2,col.ci=NULL,lty.ci=2,lwd.ci=NULL,...)
+        est=TRUE, ci=NULL, B=1000, cl=0.95,
+        col="red", lty=1, lwd=2, col.ci=NULL, lty.ci=2, lwd.ci=NULL, ...)
 }
 \arguments{
 

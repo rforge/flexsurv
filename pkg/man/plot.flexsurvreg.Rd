@@ -31,8 +31,9 @@
     a covariate \code{agegroup} specified as an unordered factor with
     levels \code{20-29, 30-39, 40-49, 50-59}, and baseline level
     \code{20-29}, there are three contrasts.  To plot curves for groups
-    \code{20-29} and \code{40-49}, supply \code{X = rbind(c(0,0,0),
-    c(0,1,0))}, since all contrasts are zero for the baseline level, and
+    \code{20-29} and \code{40-49}, supply
+    \code{X = rbind(c(0,0,0), c(0,1,0))}, since
+    all contrasts are zero for the baseline level, and
     the second contrast is ``turned on'' for the third level
     \code{40-49}.
 

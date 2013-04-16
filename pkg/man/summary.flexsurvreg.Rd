@@ -9,7 +9,7 @@
 }
 \usage{
 \method{summary}{flexsurvreg}(object, X=NULL, type="survival", t=NULL,
-B=1000, cl=0.95,...)
+         B=1000, cl=0.95,...)
 }
 \arguments{
   \item{object}{Output from \code{\link{flexsurvreg}} or \code{\link{flexsurvspline}}, representing a fitted
@@ -28,10 +28,10 @@ B=1000, cl=0.95,...)
     a covariate \code{agegroup} specified as an unordered factor with
     levels \code{20-29, 30-39, 40-49, 50-59}, and baseline level
     \code{20-29}, there are three contrasts.  To return summaries for
-    groups \code{20-29} and \code{40-49}, supply \code{X =
-    rbind(c(0,0,0), c(0,1,0))}, since all contrasts are zero for the
-    baseline level, and the second contrast is ``turned on'' for the
-    third level \code{40-49}.
+    groups \code{20-29} and \code{40-49}, supply
+    \code{X = rbind(c(0,0,0), c(0,1,0))},
+    since all contrasts are zero for the baseline level, and the second
+    contrast is ``turned on'' for the third level \code{40-49}.
 
     If there are only factor covariates in the model, then all distinct
     groups are used by default.
@@ -83,7 +83,7 @@ B=1000, cl=0.95,...)
   are obtained analytically as in Royston and Parmar (2002).
 }
 \seealso{
-  \code{\link{flexsurvreg}},\code{\link{flexsurvspline}}.
+  \code{\link{flexsurvreg}}, \code{\link{flexsurvspline}}.
 }
 \references{
   Royston, P. and Parmar, M. (2002).  Flexible parametric
