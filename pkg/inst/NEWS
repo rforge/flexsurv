@@ -11,6 +11,14 @@ Version 0.2 (2013-04-??)
   with confidence intervals mosly computed by a simulation method.  
   These are what the plot() method plots. 
 
+* Force use of BFGS for 1D optimisation, avoiding warnings.
+
+* Work around NaN warnings from spline models due to parameters
+  violating implicit constraints.
+
+* New psurvspline and dsurvspline functions giving distribution and
+  density function for the spline model.
+
 
 Version 0.1.5 (2012-08-29)
 -------------------------

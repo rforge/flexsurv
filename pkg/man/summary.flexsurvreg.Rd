@@ -8,11 +8,11 @@
   \code{\link{flexsurvspline}} model.
 }
 \usage{
-\method{summary}{flexsurvreg}(x, X=NULL, type="survival", t=NULL,
+\method{summary}{flexsurvreg}(object, X=NULL, type="survival", t=NULL,
 B=1000, cl=0.95,...)
 }
 \arguments{
-  \item{x}{Output from \code{\link{flexsurvreg}} or \code{\link{flexsurvspline}}, representing a fitted
+  \item{object}{Output from \code{\link{flexsurvreg}} or \code{\link{flexsurvspline}}, representing a fitted
     survival model object.}
 
   \item{X}{ Matrix of covariate values to produce fitted values

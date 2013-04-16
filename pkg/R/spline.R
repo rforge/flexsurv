@@ -126,45 +126,35 @@ minusloglik.stpm <- function(optpars, knots, t, dead, X=0, inits, fixedpars=NULL
     pars <- inits
     npars <- length(pars)
     pars[setdiff(1:npars, fixedpars)] <- optpars
-    x <- log(t)
     nk <- length(knots)
     gamma <- pars[1:nk] # always at least two of these, intercept + weibull par
-    eta <- fs.spline(gamma, x, knots)
-    if (npars > nk) { # any covariates?
+    if (npars > nk) {
         beta <- pars[(nk+1):npars]
-        eta <- eta + X %*% beta
     }
+    else {beta <- 0; X <- matrix(0, nrow=length(t))}
     dead <- as.logical(dead)
-    if (scale=="hazard") {
-        dens <- 1 / t[dead] * fs.dspline(gamma, x[dead], knots) * exp(eta[dead] - exp(eta[dead]))
-        surv <- exp(-exp(eta[!dead]))
-    }
-    else if (scale=="odds") {
-        dens <- 1 / t[dead] * fs.dspline(gamma, x[dead], knots) * exp(eta[dead]) / (1 + exp(eta[dead]))^2
-        surv <- 1 / (1 + exp(eta[!dead]))
-    }
-    else if (scale=="normal") {
-        dens <- 1 / t[dead] * fs.dspline(gamma, x[dead], knots) * dnorm(eta[dead])
-        surv <- pnorm(-eta[!dead])
-    }
+    dens <- dsurvspline(t[dead], gamma, beta, X[dead,,drop=FALSE], knots, scale)
+    surv <- 1 - psurvspline(t[!dead], gamma, beta, X[!dead,,drop=FALSE], knots, scale)
     ## workaround to avoid warnings, TODO think about implicit parameter constraints instead
     if (any(dens<=0) || any(surv<=0)) return(Inf)
     - ( sum(log(dens)) + sum(log(surv)) )
 }
 
-basis <- function(knots, x) {
-    nk <- length(knots)
-    lam <- (knots[nk] - knots)/(knots[nk] - knots[1])
-    b <- matrix(nrow=length(x), ncol=nk)
-    b[,1] <- 1
-    b[,2] <- x
-    if (nk>2) {
-        for (j in 1:(nk-2)) {
-            b[,j+2] <- pmax(x - knots[j+1], 0)^3 - lam[j+1]*pmax(x - knots[1], 0)^3 -
-                (1 - lam[j+1])*pmax(x - knots[nk], 0)^3
-        }
-    }
-    b
+psurvspline <- function(q, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
+    if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
+    match.arg(scale, c("hazard","odds","normal"))
+    eta <- fs.spline(gamma, log(q), knots) + as.numeric(X %*% beta) + offset
+    surv <- if (scale=="hazard")  exp(-exp(eta)) else if (scale=="odds") 1 / (exp(eta) + 1) else if (scale=="normal") pnorm(-eta) 
+    as.numeric(1 - surv)
+}
+
+dsurvspline <- function(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
+    if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
+    match.arg(scale, c("hazard","odds","normal"))
+    eta <- fs.spline(gamma, log(x), knots) + as.numeric(X %*% beta) + offset
+    eeta <- if (scale=="hazard") exp(eta - exp(eta)) else if (scale=="odds")  exp(eta) / (1 + exp(eta))^2 else if (scale=="normal") dnorm(eta)
+    dens <- 1 / x * fs.dspline(gamma, log(x), knots) * eeta
+    as.numeric(dens)
 }
 
 fs.spline <- function(gamma, x, knots){
@@ -188,12 +178,18 @@ fs.dspline <- function(gamma, x, knots){
     dspline
 }
 
-## ## TODO put in summary function for flexsurvreg object which is a spline.
-## psurvspline <- function(q, gamma, beta, knots, scale){
-##     eta <- fs.spline(gamma, log(t), knots) + as.numeric(X %*% beta)
-##     surv <- if (scale=="hazard") exp(-exp(eta)) else if (scale=="odds") 1 / (exp(eta) + 1) else if (scale=="normal") pnorm(-eta)
-##     1 - surv
-## }
+basis <- function(knots, x) {
+    nk <- length(knots)
+    lam <- (knots[nk] - knots)/(knots[nk] - knots[1])
+    b <- matrix(nrow=length(x), ncol=nk)
+    b[,1] <- 1
+    b[,2] <- x
+    if (nk>2) {
+        for (j in 1:(nk-2)) {
+            b[,j+2] <- pmax(x - knots[j+1], 0)^3 - lam[j+1]*pmax(x - knots[1], 0)^3 -
+                (1 - lam[j+1])*pmax(x - knots[nk], 0)^3
+        }
+    }
+    b
+}
 
-## dsurvspline <- function(){
-## }

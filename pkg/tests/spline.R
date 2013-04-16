@@ -17,7 +17,6 @@ test <- function(x, y, tol=1e-06) {
 }
 
 bc$foo <- factor(sample(1:3, nrow(bc), replace=TRUE))
-bc$cts <- rnorm(nrow(bc))
 bc$recyrs <- bc$rectime/365
 
 ## Weibull
@@ -25,10 +24,10 @@ spl <- flexsurvspline(Surv(recyrs, censrec) ~ group + foo, data=bc, k=0)
 spl
 spl$loglik  +  sum(log(bc$recyrs[bc$censrec==1])) # OK same as Stata streg , and stpm with hazard = TRUE 
 -2*(spl$loglik  +  sum(log(bc$recyrs[bc$censrec==1])))
-summary(spl)
-summary(spl, type="survival")
-summary(spl, type="cumhaz")
-summary(spl, type="hazard")
+summary(spl, B=10)
+summary(spl, type="survival", B=10)
+summary(spl, type="cumhaz", B=10)
+summary(spl, type="hazard", B=10)
 if (interactive()){ 
     plot(spl)
     plot(spl, ci=TRUE)
@@ -48,8 +47,6 @@ if (interactive()){
     plot(spl, type="hazard", ci=FALSE)
 }
 
-summary(survfit(Surv(recyrs, censrec) ~ group, data=bc))
-
 ## Best-fitting model for breast cancer example in paper 
 ## gamma -3.451(0.203), 2.915(0.298), 0.191(0.044) 
 spl <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=1, scale="odds")
@@ -67,11 +64,13 @@ if (interactive()){
 splh <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=1, scale="hazard")
 spln <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=1, scale="normal")
 if (interactive()){
-    plot(spl)
-    lines(splh, col="blue")
-    lines(spln, col="green")
+    plot(spl, ci=TRUE, lwd.ci=1)
+    lines(splh, col="blue", ci=TRUE, lwd.ci=1)
+    lines(spln, col="green", ci=TRUE, lwd.ci=1)
 }
-
+lapply(summary(spl), function(x)x[1:3,])
+lapply(summary(splh), function(x)x[1:3,])
+lapply(summary(spln), function(x)x[1:3,])
 
 ### Test reduction to weibull
 ### what are pars? log(H(t)) = g0 + g1 log(t) + bz 

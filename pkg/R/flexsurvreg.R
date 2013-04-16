@@ -208,8 +208,6 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
                                          t=Y[,"time"], dead=Y[,"status"], X=X, dlist=dlist,
                                          inits=inits, fixedpars=fixedpars, hessian=TRUE))
         opt <- do.call("optim", optim.args)       
-#        opt <- optim(optpars, minusloglik.flexsurv, t=Y[,"time"], dead=Y[,"status"], X=X, dlist=dlist,
-#                     inits=inits, fixedpars=fixedpars, hessian=TRUE, ...)
         est <- opt$par
         if (all(!is.na(opt$hessian)) && all(!is.nan(opt$hessian)) && all(is.finite(opt$hessian)) &&
             all(eigen(opt$hessian)$values > 0))
@@ -292,9 +290,8 @@ cihaz.spline <- function(x, t, X, B=1000, cl=0.95) {
     for (i in 1:B) {
         gamma <- sim[i, 1:(x$k + 2)]
         beta <- if (x$ncovs==0) 0 else sim[i, (x$k+3):(x$k + 2 + x$ncoveffs)]
-        eta <- fs.spline(gamma, log(t), x$knots) + as.numeric(X %*% beta)
-        surv <- if (x$scale=="hazard") exp(-exp(eta)) else if (x$scale=="odds") 1 / (exp(eta) + 1) else if (x$scale=="normal") pnorm(-eta)
-        dens <- 1 / t * fs.dspline(gamma, log(t), x$knots) * exp(eta - exp(eta))
+        surv <- 1 - psurvspline(t, gamma, beta, X, x$knots, x$scale)
+        dens <- dsurvspline(t, gamma, beta, X, x$knots, x$scale)
         ret[i,] <- dens / surv
     }
     ret <- t(apply(ret, 2, function(x)quantile(x, c((1-cl)/2, 1 - (1-cl)/2), na.rm=TRUE)))
@@ -325,8 +322,9 @@ print.flexsurvreg <- function(x, ...)
         "\nAIC = ", x$AIC, "\n\n", sep="")
 }
 
-summary.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, B=1000, cl=0.95, ...)
+summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, B=1000, cl=0.95, ...)
 {
+    x <- object
     dat <- x$data
     isfac <- sapply(dat$Xraw,is.factor)
     ncovs <- x$ncovs
@@ -396,22 +394,18 @@ summary.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, B=1000, cl=0
             }
         }
         else {
-            eta <- fs.spline(gamma, log(t), x$knots) + as.numeric(X[i,] %*% beta)
             xd <- cbind(basis(x$knots, log(t)))
             nobs <- length(t)
             if (ncovs>0) xd <- cbind(xd, matrix(rep(X[i,],each=nobs),nrow=nobs))
             seeta <- numeric(nobs)
             for (j in 1:nobs) seeta[j] <- sqrt(xd[j,] %*% x$cov %*% xd[j,])
-            cl <- 0.95
-            lcleta <- eta - qnorm(1 - (1-cl)/2)*seeta
-            ucleta <- eta + qnorm(1 - (1-cl)/2)*seeta
-            surv <- if (x$scale=="hazard") exp(-exp(eta)) else if (x$scale=="odds") 1 / (exp(eta) + 1) else if (x$scale=="normal") pnorm(-eta)
-            lclsurv <- if (x$scale=="hazard") exp(-exp(lcleta)) else if (x$scale=="odds") 1 / (exp(lcleta) + 1) else if (x$scale=="normal") pnorm(-lcleta)
-            uclsurv <- if (x$scale=="hazard") exp(-exp(ucleta)) else if (x$scale=="odds") 1 / (exp(ucleta) + 1) else if (x$scale=="normal") pnorm(-ucleta)
+            surv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale)
+            lclsurv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale, offset=-qnorm(1 - (1-cl)/2)*seeta)
+            uclsurv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale, offset=qnorm(1 - (1-cl)/2)*seeta)
             if (type=="survival") {y <- surv; ly <- lclsurv; uy <- uclsurv}
-            else if (type=="cumhaz") {y <- -log(surv); ly <- -log(lclsurv); uy <- -log(uclsurv)}
+            else if (type=="cumhaz") {y <- -log(surv); ly <- -log(lclsurv); uy <- -log(uclsurv)}            
             else if (type=="hazard") {
-                dens <- 1 / t * fs.dspline(gamma, log(t), x$knots) * exp(eta - exp(eta))
+                dens <- dsurvspline(t, gamma, beta, X[i,], x$knots, x$scale)
                 y <- dens/surv
                 haz.ci <- cihaz.spline(x, t, X[i,], B=B, cl=cl)
                 ly <- haz.ci[,1]; uy <- haz.ci[,2]
