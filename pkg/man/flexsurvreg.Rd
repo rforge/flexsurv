@@ -22,7 +22,9 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
     \code{Surv(time, dead) ~ age + sex}
 
     If there are no covariates, specify \code{1} on the right hand side,
-    for example \code{Surv(time, dead) ~ 1}.     
+    for example \code{Surv(time, dead) ~ 1}.   Only \code{Surv} objects
+    of \code{type="right"} or \code{type="counting"}, corresponding to
+    right-censored and/or left-truncated observations, are supported.
   }
   \item{data}{
     A data frame in which to find variables supplied in \code{formula}.

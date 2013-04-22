@@ -9,7 +9,7 @@
 }
 \usage{
 \method{summary}{flexsurvreg}(object, X=NULL, type="survival", t=NULL,
-         B=1000, cl=0.95,...)
+         start=NULL, B=1000, cl=0.95,...)
 }
 \arguments{
   \item{object}{Output from \code{\link{flexsurvreg}} or \code{\link{flexsurvspline}}, representing a fitted
@@ -50,8 +50,13 @@
   \item{t}{ Times to calculate fitted values for. By default, these are the
     sorted unique observation (including censoring) times in the data. }
 
+  \item{start}{ Left-truncation times, defaults to those corresponding
+  to the default \code{t} in the data. }
+
   \item{B}{Number of simulations from the normal asymptotic distribution
-  of the estimates used to calculate confidence intervals.}
+  of the estimates used to calculate confidence intervals.  Decrease
+    for greater speed at the expense of accuracy, or set
+  \code{B=0} to turn off calculation of CIs.}
 
   \item{cl}{Width of symmetric confidence intervals, relative to 1.}
 

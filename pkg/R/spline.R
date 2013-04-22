@@ -10,6 +10,11 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
     Y <- model.extract(m, "response")
     if (!inherits(Y, "Surv"))
         stop("Response must be a survival object")
+    if (!(attr(Y, "type")  %in% c("right","counting")))
+        stop("Survival object type \"", attr(Y, "type"), "\"", " not supported")
+    if (attr(Y, "type") == "counting")
+        Y <- cbind(Y, time=Y[,"stop"] - Y[,"start"]) # converts Y from Surv object to numeric matrix
+    else Y <- cbind(Y, start=0, stop=Y[,"time"])
     Terms <- attr(m, "terms")
     X <- model.matrix(Terms, m)
     dat <- list(Y=Y, X=X[,-1,drop=FALSE], Xraw=m[,-1,drop=FALSE])
@@ -21,17 +26,17 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
         is.wholenumber <-
             function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
         if (!is.wholenumber(k) || (k<0)) stop("number of knots \"k\" must be a non-negative integer")
-        knots <- quantile(log(Y[,"time"])[Y[,"status"]==1], seq(0, 1, length=k+2))
+        knots <- quantile(log(Y[,"stop"])[Y[,"status"]==1], seq(0, 1, length=k+2))
     }
     else {
         if (!is.numeric(knots)) stop("\"knots\" must be a numeric vector")
-        minlogtime <- min(log(Y[,"time"]))
+        minlogtime <- min(log(Y[,"stop"]))
         if (any(knots <= minlogtime)) {
-            badknots <- knots[knots < min(log(Y[,"time"]))]
+            badknots <- knots[knots < min(log(Y[,"stop"]))]
             plural <- if (length(badknots) > 1) "s" else ""
             stop("knot", plural, " ", paste(badknots,collapse=", "), " less than or equal to minimum log time ", minlogtime)
         }
-        maxlogtime <- max(log(Y[,"time"]))
+        maxlogtime <- max(log(Y[,"stop"]))
         if (any(knots >= maxlogtime)) {
             badknots <- knots[knots > maxlogtime]
             plural <- if (length(badknots) > 1) "s" else ""
@@ -61,7 +66,7 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
     }
     if ((is.logical(fixedpars) && fixedpars==TRUE) ||
         (is.numeric(fixedpars) && all(fixedpars == 1:npars))) {
-        minusloglik <- minusloglik.stpm(optpars=inits, knots=knots, t=Y[,"time"], dead=Y[,"status"], X=X, inits=inits,
+        minusloglik <- minusloglik.stpm(optpars=inits, knots=knots, Y=Y, X=X, inits=inits,
                                    fixedpars=NULL, scale=scale)
         res <- cbind(est=inits,lcl=NA,ucl=NA)
         ret <- list(call=match.call(), k=k, knots=knots, scale=scale, res=res, npars=0,
@@ -72,7 +77,7 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
     else {
         optpars <- inits[setdiff(1:npars, fixedpars)]
         opt <- optim(optpars, minusloglik.stpm, knots=knots,
-                     t=Y[,"time"], dead=Y[,"status"], X=X,
+                     Y=Y, X=X,
                      inits=inits, fixedpars=fixedpars, scale=scale, hessian=TRUE, ...)
         est <- opt$par
         cov <- solve(opt$hessian); se <- sqrt(diag(cov))
@@ -84,7 +89,7 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
         res[setdiff(1:npars, fixedpars),] <- cbind(est, lcl, ucl, se)
         colnames(res) <- c("est", paste(c("L","U"), round(cl*100), "%", sep=""), "se")
         ret <- list(call=match.call(), k=k, knots=knots, scale=scale, res=res, cov=cov,
-                    npars=length(est), fixedpars=fixedpars, optpars=optpars,
+                    npars=length(est), fixedpars=fixedpars, optpars=setdiff(1:npars, fixedpars),
                     ncovs=ncovs, ncoveffs=ncoveffs, 
                     loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,
                     data = dat, datameans = colMeans(dat$X),
@@ -122,7 +127,7 @@ flexsurv.splineinits <- function(Y, X, data, knots, scale)
     inits
 }
 
-minusloglik.stpm <- function(optpars, knots, t, dead, X=0, inits, fixedpars=NULL, scale="hazard"){
+minusloglik.stpm <- function(optpars, knots, Y, X=0, inits, fixedpars=NULL, scale="hazard"){
     pars <- inits
     npars <- length(pars)
     pars[setdiff(1:npars, fixedpars)] <- optpars
@@ -131,13 +136,14 @@ minusloglik.stpm <- function(optpars, knots, t, dead, X=0, inits, fixedpars=NULL
     if (npars > nk) {
         beta <- pars[(nk+1):npars]
     }
-    else {beta <- 0; X <- matrix(0, nrow=length(t))}
-    dead <- as.logical(dead)
-    dens <- dsurvspline(t[dead], gamma, beta, X[dead,,drop=FALSE], knots, scale)
-    surv <- 1 - psurvspline(t[!dead], gamma, beta, X[!dead,,drop=FALSE], knots, scale)
+    else {beta <- 0; X <- matrix(0, nrow=nrow(Y))}
+    dead <- Y[,"status"]==1
+    dens <- dsurvspline(Y[dead,"stop"], gamma, beta, X[dead,,drop=FALSE], knots, scale)
+    surv <- 1 - psurvspline(Y[!dead,"stop"], gamma, beta, X[!dead,,drop=FALSE], knots, scale)
+    pobs <- 1 - psurvspline(Y[,"start"], gamma, beta, X[,,drop=FALSE], knots, scale) # = 1 unless left-truncated
     ## workaround to avoid warnings, TODO think about implicit parameter constraints instead
     if (any(dens<=0) || any(surv<=0)) return(Inf)
-    - ( sum(log(dens)) + sum(log(surv)) )
+    - ( sum(log(dens)) + sum(log(surv)) - sum(log(pobs)))
 }
 
 psurvspline <- function(q, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){

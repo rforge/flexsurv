@@ -30,10 +30,10 @@ summary(spl, type="cumhaz", B=10)
 summary(spl, type="hazard", B=10)
 if (interactive()){ 
     plot(spl)
-    plot(spl, ci=TRUE)
+    plot(spl, ci=TRUE, B=40)
     plot(spl, type="cumhaz")
     plot(spl, type="hazard")
-    plot(spl, type="hazard", ci=TRUE)
+    plot(spl, type="hazard", ci=TRUE, B=40)
 }
 
 ## Weibull, no covs
@@ -64,13 +64,13 @@ if (interactive()){
 splh <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=1, scale="hazard")
 spln <- flexsurvspline(Surv(recyrs, censrec) ~ group, data=bc, k=1, scale="normal")
 if (interactive()){
-    plot(spl, ci=TRUE, lwd.ci=1)
-    lines(splh, col="blue", ci=TRUE, lwd.ci=1)
-    lines(spln, col="green", ci=TRUE, lwd.ci=1)
+    plot(spl, ci=TRUE, lwd.ci=1, B=30)
+    lines(splh, col="blue", ci=TRUE, B=30)
+    lines(spln, col="green", ci=TRUE, B=30)
 }
-lapply(summary(spl), function(x)x[1:3,])
-lapply(summary(splh), function(x)x[1:3,])
-lapply(summary(spln), function(x)x[1:3,])
+lapply(summary(spl,B=10), function(x)x[1:3,])
+lapply(summary(splh,B=10), function(x)x[1:3,])
+lapply(summary(spln,B=10), function(x)x[1:3,])
 
 ### Test reduction to weibull
 ### what are pars? log(H(t)) = g0 + g1 log(t) + bz 
@@ -121,7 +121,7 @@ if (is.element("eha", installed.packages()[,1])) {
     test(1/fitll$res["scale",1]^fitll$res["shape",1], exp(fitsp$res["gamma0",1]), tol=1e-02)
     test(fitsp$res["gamma1",1], fitll$res["shape",1], tol=1e-02)
     if (interactive()) { 
-        lines.flexsurvreg(fitll, col.fit="pink", lty.fit=2)
+        lines.flexsurvreg(fitll, col="pink", lty=2, ci=TRUE, B=20)
     }
 }
 
@@ -131,3 +131,14 @@ fitln
 fitsp <- flexsurvspline(Surv(recyrs, censrec) ~ 1, data=bc, k=0, scale="normal")
 test(fitsp$res["gamma0",1], -fitln$res["meanlog",1]/fitln$res["sdlog",1], tol=1e-02)
 test(fitsp$res["gamma1",1], 1 /fitln$res["sdlog",1], tol=1e-02)
+
+
+## Left-truncation.
+if (0) { 
+bc <- bc[bc$recyrs>2,]
+(spl <- flexsurvspline(Surv(recyrs, censrec) ~ 1, data=bc, k=0))
+(spl <- flexsurvspline(Surv(rep(0, nrow(bc)), recyrs, censrec) ~ 1, data=bc, k=0))
+plot(spl)
+spl <- flexsurvspline(Surv(rep(1.9, nrow(bc)), recyrs, censrec) ~ 1, data=bc, k=0)
+lines(spl, col="blue") # truncated model fits much better
+}
