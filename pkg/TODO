@@ -1,7 +1,7 @@
 MLE for Poly-Weibull and other poly-hazard models (make generic flexsurvpoly(base="weibull", ncause)  )
 dpqr for poly-hazard, dpolyhaz(base="weibull", ncause)
 
-stable h and H functions
+stable h and H functions: desirable if do polyhazard.
 
 time dependent hazard ratios, implemented in stpm2.
 
