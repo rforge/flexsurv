@@ -6,5 +6,3 @@ stable h and H functions: desirable if do polyhazard.
 time dependent hazard ratios, implemented in stpm2.
 
 Implicit constraints in spline parameters - see Andrew Lover's example.
-
-Analytic derivatives of the log-likelihood for use in BFGS optimiser

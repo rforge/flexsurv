@@ -79,7 +79,7 @@ flexsurv.dists <- list(
                        location="rate",
                        transforms=c(identity, log),
                        inv.transforms=c(identity, exp),
-                       inits=function(t){c(0,1 / mean(t))}
+                       inits=function(t){c(0.001,1 / mean(t))}
                        )
                        )
 
@@ -138,7 +138,7 @@ check.dlist <- function(dlist){
     dlist
 }
 
-flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
+flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95, ...)
 {
     call <- match.call()
     indx <- match(c("formula", "data"), names(call), nomatch = 0)
@@ -195,6 +195,7 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
         dots <- if(npars>2) "...," else ""
         stop("fixedpars must be TRUE/FALSE or a vector of indices in 1,",dots,npars)
     }
+    deriv.supported <- c("exp","weibull","gompertz")
     if ((is.logical(fixedpars) && fixedpars==TRUE) ||
         (is.numeric(fixedpars) && all(fixedpars == 1:npars))) {
         minusloglik <- minusloglik.flexsurv(inits, Y=Y, X=X, dlist=dlist, inits=inits)
@@ -211,11 +212,12 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
         optpars <- inits[setdiff(1:npars, fixedpars)]
         optim.args <- list(...)
         if (is.null(optim.args$method))
-            optim.args$method <- if (length(optpars)==1) "BFGS" else "Nelder-Mead"
-        optim.args <- c(optim.args, list(par=optpars, fn=minusloglik.flexsurv,
+            optim.args$method <- "BFGS"
+        gr <- if (dlist$name %in% deriv.supported) Dminusloglik.flexsurv else NULL
+        optim.args <- c(optim.args, list(par=optpars, fn=minusloglik.flexsurv, gr=gr,
                                          Y=Y, X=X, dlist=dlist,
                                          inits=inits, fixedpars=fixedpars, hessian=TRUE))
-        opt <- do.call("optim", optim.args)       
+        opt <- do.call("optim", optim.args)
         est <- opt$par
         if (all(!is.na(opt$hessian)) && all(!is.nan(opt$hessian)) && all(is.finite(opt$hessian)) &&
             all(eigen(opt$hessian)$values > 0))
@@ -368,9 +370,9 @@ summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=N
         }
     }
     else if (is.null(X)) X <- as.matrix(0, nrow=1, ncol=max(ncol(dat$X),1))
-    if (is.null(t)) 
+    if (is.null(t))
         t <- sort(unique(dat$Y[,"stop"]))
-    if (is.null(start)) 
+    if (is.null(start))
         start <- dat$Y[order(dat$Y[!duplicated(dat$Y[,"stop"]),"stop"]),"start"]
     pcall <- list(q=t)
     if (!is.null(x$knots)) {
@@ -439,9 +441,9 @@ summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=N
                 lclsurv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale, offset=-qnorm(1 - (1-cl)/2)*seeta)
                 uclsurv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale, offset=qnorm(1 - (1-cl)/2)*seeta)
             }
-            else { lclsurv <- res.ci[,1,"surv"]; uclsurv <- res.ci[,2,"surv"] }                
+            else { lclsurv <- res.ci[,1,"surv"]; uclsurv <- res.ci[,2,"surv"] }
             if (type=="survival") {y <- surv/pobs; ly <- lclsurv; uy <- uclsurv}
-            else if (type=="cumhaz") {y <- -log(surv/pobs); ly <- -log(lclsurv); uy <- -log(uclsurv)}            
+            else if (type=="cumhaz") {y <- -log(surv/pobs); ly <- -log(lclsurv); uy <- -log(uclsurv)}
             else if (type=="hazard") {
                 dens <- dsurvspline(t, gamma, beta, X[i,], x$knots, x$scale)
                 y <- dens/surv
@@ -465,7 +467,7 @@ plot.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, start=NULL,
 {
     type <- match.arg(type, c("survival","cumhaz","hazard"))
     ## don't calculate or plot CIs by default if all covs are categorical -> multiple curves
-    if (is.null(ci)) 
+    if (is.null(ci))
         ci <- ((x$ncovs == 0) || (!(sapply(x$data$Xraw,is.factor))))
     if (!ci) B <- 0
     summ <- summary.flexsurvreg(x, X=X, type=type, t=t, B=B, cl=cl)

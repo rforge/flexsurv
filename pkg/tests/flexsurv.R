@@ -33,7 +33,7 @@ fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
 fitws <- survreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
                  data = ovarian, dist="weibull")
 test(fitw$loglik, fitws$loglik[1], tol=1e-04)
-test(fitws$scale, 1 / fitw$res["shape","est"], tol=1e-04)
+test(fitws$scale, 1 / fitw$res["shape","est"], tol=1e-03)
 test(as.numeric(coef(fitws)[1]), log(fitw$res["scale","est"]), tol=1e-03)
 ## Log-normal
 fitln <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
@@ -273,13 +273,13 @@ f <- function(){
   fitg <- flexsurvreg(formula = Surv(futime, fustat) ~ 1, data = ovarian2, dist="gengamma")
   print(fitg)
   if(interactive()) plot(fitg)
-  fitg <- flexsurvreg(formula = Surv(ovarian2$futime, ovarian2$fustat) ~ factor(ovarian2$rx), dist="gengamma")
+  fitg <- flexsurvreg(formula = Surv(ovarian2$futime, ovarian2$fustat) ~ factor(ovarian2$rx), dist="gengamma",method="Nelder-Mead")
   if(interactive()) print(fitg)
   plot(fitg, ci=TRUE)
 }
 f()
 
-if (interactive()) { 
+if (interactive()) {
     fitg <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, dist="gengamma")
     plot(fitg)
     plot(fitg, type="cumhaz")
@@ -305,12 +305,12 @@ if (interactive()) {
     f()
 }
 ## Left-truncation.
-## Time passed as arg to initial values is stop - start, 
+## Time passed as arg to initial values is stop - start,
 ## since, e.g. mean of trunc exponential dist is 1/lam + b, mean par plus trunc point
 ## time at risk in returned object is currently sum of (stop - start)
 ## default knot choice for spline - start + quantiles of log dt
 
-if(0){ 
+if(0){
 set.seed(12082012)
 sim <- rgenf(3000, 1.5, 1, -0.4, 0.6)
 dead <- as.numeric(sim<=30)

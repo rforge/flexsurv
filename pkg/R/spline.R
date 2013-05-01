@@ -1,4 +1,4 @@
-flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL, fixedpars=NULL, cl=0.95,...)
+flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL, fixedpars=NULL, cl=0.95, ...)
 {
     call <- match.call()
     indx <- match(c("formula", "data"), names(call), nomatch = 0)
@@ -76,9 +76,15 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
     }
     else {
         optpars <- inits[setdiff(1:npars, fixedpars)]
-        opt <- optim(optpars, minusloglik.stpm, knots=knots,
-                     Y=Y, X=X,
-                     inits=inits, fixedpars=fixedpars, scale=scale, hessian=TRUE, ...)
+        optim.args <- list(...)
+        if (is.null(optim.args$method))
+            optim.args$method <- "BFGS"
+        gr <- if (scale=="normal") NULL else Dminusloglik.stpm
+        optim.args <- c(optim.args, list(par=optpars, fn=minusloglik.stpm, gr=gr,
+                                         knots=knots, Y=Y, X=X,
+                                         inits=inits, fixedpars=fixedpars,
+                                         scale=scale, hessian=TRUE))
+        opt <- do.call("optim", optim.args)
         est <- opt$par
         cov <- solve(opt$hessian); se <- sqrt(diag(cov))
         if (!is.numeric(cl) || length(cl)>1 || !(cl>0) || !(cl<1))
@@ -90,7 +96,7 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
         colnames(res) <- c("est", paste(c("L","U"), round(cl*100), "%", sep=""), "se")
         ret <- list(call=match.call(), k=k, knots=knots, scale=scale, res=res, cov=cov,
                     npars=length(est), fixedpars=fixedpars, optpars=setdiff(1:npars, fixedpars),
-                    ncovs=ncovs, ncoveffs=ncoveffs, 
+                    ncovs=ncovs, ncoveffs=ncoveffs,
                     loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,
                     data = dat, datameans = colMeans(dat$X),
                     N=nrow(dat$Y), events=sum(dat$Y[,"status"]), trisk=sum(dat$Y[,"time"]))
@@ -149,39 +155,18 @@ minusloglik.stpm <- function(optpars, knots, Y, X=0, inits, fixedpars=NULL, scal
 psurvspline <- function(q, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
     if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
     match.arg(scale, c("hazard","odds","normal"))
-    eta <- fs.spline(gamma, log(q), knots) + as.numeric(X %*% beta) + offset
-    surv <- if (scale=="hazard")  exp(-exp(eta)) else if (scale=="odds") 1 / (exp(eta) + 1) else if (scale=="normal") pnorm(-eta) 
+    eta <- basis(knots, log(q)) %*% gamma + as.numeric(X %*% beta) + offset
+    surv <- if (scale=="hazard")  exp(-exp(eta)) else if (scale=="odds") 1 / (1 + exp(eta)) else if (scale=="normal") pnorm(-eta)
     as.numeric(1 - surv)
 }
 
 dsurvspline <- function(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
     if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
     match.arg(scale, c("hazard","odds","normal"))
-    eta <- fs.spline(gamma, log(x), knots) + as.numeric(X %*% beta) + offset
+    eta <- basis(knots, log(x)) %*% gamma + as.numeric(X %*% beta) + offset
     eeta <- if (scale=="hazard") exp(eta - exp(eta)) else if (scale=="odds")  exp(eta) / (1 + exp(eta))^2 else if (scale=="normal") dnorm(eta)
-    dens <- 1 / x * fs.dspline(gamma, log(x), knots) * eeta
+    dens <- 1 / x * dbasis(knots, log(x)) %*% gamma * eeta
     as.numeric(dens)
-}
-
-fs.spline <- function(gamma, x, knots){
-    b <- basis(knots, x)
-    spline <- b %*% gamma
-    spline
-}
-
-fs.dspline <- function(gamma, x, knots){
-    nk <- length(knots)
-    lam <- (knots[nk] - knots)/(knots[nk] - knots[1])
-    basis <- matrix(nrow=length(x), ncol=nk-1)
-    basis[,1] <- 1
-    if (nk>2) {
-        for (j in 2:(nk-1)) {
-            basis[,j] <- 3*pmax(x - knots[j], 0)^2 - 3*lam[j]*pmax(x - knots[1], 0)^2 -
-                3*(1 - lam[j])*pmax(x - knots[nk], 0)^2
-        }
-    }
-    dspline <- basis %*% gamma[-1]
-    dspline
 }
 
 basis <- function(knots, x) {
@@ -199,3 +184,17 @@ basis <- function(knots, x) {
     b
 }
 
+dbasis <- function(knots, x) {
+    nk <- length(knots)
+    lam <- (knots[nk] - knots)/(knots[nk] - knots[1])
+    b <- matrix(nrow=length(x), ncol=nk)
+    b[,1] <- 0
+    b[,2] <- 1
+    if (nk>2) {
+        for (j in 3:nk) {
+            b[,j] <- 3*pmax(x - knots[j-1], 0)^2 - 3*lam[j-1]*pmax(x - knots[1], 0)^2 -
+                3*(1 - lam[j-1])*pmax(x - knots[nk], 0)^2
+        }
+    }
+    b
+}
