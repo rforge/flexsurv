@@ -1,6 +1,6 @@
 -*- text -*-
 
-Version 0.2 (2013-05-??)
+Version 0.2 (2013-05-13)
 -------------------------
 
 * New summary() method for fitted flexsurvreg and flexsurvspline model

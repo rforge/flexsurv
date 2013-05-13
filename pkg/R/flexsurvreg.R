@@ -346,9 +346,6 @@ print.flexsurvreg <- function(x, ...)
         "\nAIC = ", x$AIC, "\n\n", sep="")
 }
 
-any.cont.covs <- function(x) {
-}
-
 summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=NULL, B=1000, cl=0.95, ...)
 {
     x <- object

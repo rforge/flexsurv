@@ -46,7 +46,7 @@ DLdexp <- function(t, rate, X, ncovs){
     res <- matrix(nrow=length(t), ncol=1 + ncovs) # generic
     ts <- 1 - t*rate
     res[,1] <- ts
-    for (i in seq(length=ncovs))
+    for (i in seq_len(ncovs))
         res[,1+i] <- X[,i]*res[,1] # generic?
     res
 }
@@ -54,7 +54,7 @@ DLdexp <- function(t, rate, X, ncovs){
 DLSexp <- function(t, rate, X, ncovs){
     res <- matrix(nrow=length(t), ncol=1 + ncovs) # generic
     res[,1] <- -t*rate
-    for (i in seq(length=ncovs))
+    for (i in seq_len(ncovs))
         res[,1+i] <- X[,i]*res[,1]
     res
 }
@@ -66,7 +66,7 @@ DLdweibull <- function(t, shape, scale, X, ncovs){
     tss <- (t/scale)^shape
     res[,1] <- 1/shape + log(t/scale) - log(t/scale)*tss
     res[,2] <- -1 - (shape-1) + shape*tss
-    for (i in seq(length=ncovs))
+    for (i in seq_len(ncovs))
         res[,2+i] <- X[,i]*res[,2]
     res
 }
@@ -76,7 +76,7 @@ DLSweibull <- function(t, shape, scale, X, ncovs){
     tss <- (t/scale)^shape
     res[,1] <- ifelse(t==0, 0, -log(t/scale)*tss)
     res[,2] <- tss*shape
-    for (i in seq(length=ncovs))
+    for (i in seq_len(ncovs))
         res[,2+i] <- X[,i]*res[,2]
     res
 }
@@ -88,7 +88,7 @@ DLdgompertz <- function(t, shape, rate, X, ncovs){
     rs <- rate/shape*exp(shape*t)
     res[,1] <- if (shape==0) 0 else t + rs*(1/shape - t) - rate/shape^2
     res[,2] <- if (shape==0) 1 - rate*t else 1 - rs + rate/shape
-    for (i in seq(length=ncovs))
+    for (i in seq_len(ncovs))
         res[,2+i] <- X[,i]*res[,2]
     res
 }
@@ -98,7 +98,7 @@ DLSgompertz <- function(t, shape, rate, X, ncovs){
     rs <- rate/shape*exp(shape*t)
     res[,1] <- if (shape==0) 0 else rs*(1/shape - t) - rate/shape^2
     res[,2] <- if (shape==0) -rate*t else - rs + rate/shape
-    for (i in seq(length=ncovs))
+    for (i in seq_len(ncovs))
         res[,2+i] <- X[,i]*res[,2]
     res
 }
@@ -130,7 +130,7 @@ DLdsurvspline <- function(t, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard"
     db <- dbasis(knots, log(t))
     eta <- b %*% gamma + as.numeric(X %*% beta)
     ds <- db %*% gamma
-    for (i in seq(along=gamma)){
+    for (i in seq_along(gamma)){
         if (scale=="hazard")
             res[,i] <- db[,i] / ds + b[,i] * (1 - exp(eta))
         else if (scale=="odds"){
@@ -138,7 +138,7 @@ DLdsurvspline <- function(t, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard"
             res[,i] <- db[,i] / ds + b[,i] * eeta
         }
     }
-    for (i in seq(along=beta)){
+    for (i in seq_along(beta)){
         if (scale=="hazard")
             res[,length(gamma)+i] <- X[,i] * (1 - exp(eta))
         else if (scale=="odds")
@@ -151,7 +151,7 @@ DLSsurvspline <- function(t, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard"
     res <- matrix(nrow=length(t), ncol=length(gamma)+length(beta))
     b <- basis(knots, log(t))
     eta <- b %*% gamma + as.numeric(X %*% beta)
-    for (i in seq(along=gamma)){
+    for (i in seq_along(gamma)){
         if (scale=="hazard")
             res[,i] <- ifelse(t==0, 0, - b[,i] * exp(eta))
         else if (scale=="odds"){
@@ -159,7 +159,7 @@ DLSsurvspline <- function(t, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard"
             res[,i] <- ifelse(t==0, 0, - b[,i] * eeta)
         }
     }
-    for (i in seq(along=beta)){
+    for (i in seq_along(beta)){
         if (scale=="hazard")
             res[,length(gamma)+i] <- ifelse(t==0, 0, - X[,i] * exp(eta))
         else if (scale=="odds")

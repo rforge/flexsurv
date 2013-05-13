@@ -13,11 +13,12 @@ flexsurv: Flexible parametric models for time-to-event data
 }
 \details{
 
-  \code{\link{flexsurvreg}} fits parametric time-to-event (survival)
-  models.  Several built-in parametric distributions are available.  Any
+  \code{\link{flexsurvreg}} fits parametric models for time-to-event
+  (survival) data.  Data may be right-censored or left-truncated.
+  Several built-in parametric distributions are available.  Any
   user-defined parametric model can also be employed by supplying a list
-  with basic information about the distribution, including the density and
-  probability functions.
+  with basic information about the distribution, including the density
+  and probability functions.
 
   Covariates are included using a linear model on a location parameter of
   the distribution.  This usually defines an accelerated failure time or
@@ -52,8 +53,8 @@ flexsurv: Flexible parametric models for time-to-event data
   code to accept any generic parametric distribution.
 
   \code{\link[survival]{survreg}} from the \pkg{survival} package, the
-  standard parametric survival modelling facility in R, only implements
-  two-parameter location-scale families.
+  recommended R package for survival analysis, supports two-parameter
+  location-scale parametric models.
 
   The \pkg{eha} package includes functions \code{\link[eha]{phreg}} and
   \code{\link[eha]{aftreg}} for parametric survival modelling under a
@@ -70,9 +71,8 @@ flexsurv: Flexible parametric models for time-to-event data
   for a parametric distribution, it can then be used easily in
   \code{\link{flexsurvreg}}.  For instance, several ``reliability''
   distributions used in industrial statistics are available in the
-  \pkg{VGAM} package.  Independent corroboration of modelling results
-  with different software can be valuable!
-
+  \pkg{VGAM} package.  Please report unexplained inconsistencies in
+  results between \pkg{flexsurv} and other software. 
 }
 \author{
   Christopher Jackson \email{chris.jackson@mrc-bsu.cam.ac.uk}
