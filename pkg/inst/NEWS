@@ -25,6 +25,10 @@ Version 0.2 (2013-05-13)
 * Work around NaN warnings from spline models presumably due to
   parameters violating implicit constraints.
 
+* If "knots" specified, boundary knots set to min/max of uncensored
+  times, not all times, to match results when "k" is specified.
+  Thanks to Paul Pynsent.
+
 
 Version 0.1.5 (2012-08-29)
 -------------------------

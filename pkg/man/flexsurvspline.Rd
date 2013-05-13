@@ -36,8 +36,8 @@ flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL,
     to  \code{df-1} in the notation of \code{stpm} for Stata.
   }
   \item{knots}{
-    Locations of knots on the axis of log time.  If not specified, these are chosen as
-    equally-spaced quantiles, for example, at the median with one knot,
+    Locations of knots on the axis of log time.  If not specified, these
+    are chosen, given \code{k}, as equally-spaced quantiles, for example, at the median with one knot,
     or at the 33\% and 67\% quantiles of log time with two knots.
     Either \code{k} or \code{knots} must be
     specified. If both are specified, \code{knots} overrides \code{k}.

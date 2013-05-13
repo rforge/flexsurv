@@ -25,6 +25,8 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
     if (is.null(knots)) {
         is.wholenumber <-
             function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
+        if (is.null(k)) stop("either \"knots\" or \"k\" must be specified")
+        if (!is.numeric(k)) stop("k must be numeric")
         if (!is.wholenumber(k) || (k<0)) stop("number of knots \"k\" must be a non-negative integer")
         knots <- quantile(log(Y[,"stop"])[Y[,"status"]==1], seq(0, 1, length=k+2))
     }
@@ -43,7 +45,7 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", inits
             stop("knot", plural, " ", paste(badknots,collapse=", "), " greater than or equal to maximum log time ", maxlogtime)
         }
         k <- length(knots)
-        knots <- c(minlogtime, knots, maxlogtime)
+        knots <- c(min(log(Y[,"stop"])[Y[,"status"]==1]), knots, max(log(Y[,"stop"])[Y[,"status"]==1]))
     }
     match.arg(scale, c("hazard","odds","normal"))
     ncovs <- ncol(dat$Xraw)
