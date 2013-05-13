@@ -29,16 +29,19 @@ flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL,
     A data frame in which to find variables supplied in \code{formula}.
     If not given, the variables should be in the working environment.
   }
-  \item{k}{
-    Number of knots in the spline. \code{k=0} will give
+  \item{k}{    
+    Number of knots in the spline. The default \code{k=0} gives
     a Weibull, log-logistic or lognormal model, if \code{"scale"} is
     \code{"hazard"}, \code{"odds"} or \code{"normal"} respectively.  \code{k} is equivalent
-    to  \code{df-1} in the notation of \code{stpm} for Stata.
+    to  \code{df-1} in the notation of \code{stpm} for Stata.  The knots
+    are then chosen as equally-spaced quantiles of the log uncensored
+    survival times, for example, at the median with one knot,
+    or at the 33\% and 67\% quantiles of log time with two knots.
+    To override this default knot placement, specify \code{knots} instead.
   }
   \item{knots}{
-    Locations of knots on the axis of log time.  If not specified, these
-    are chosen, given \code{k}, as equally-spaced quantiles, for example, at the median with one knot,
-    or at the 33\% and 67\% quantiles of log time with two knots.
+    Locations of knots on the axis of log time.  If not specified, knot
+    locations are chosen as described in \code{k} above.
     Either \code{k} or \code{knots} must be
     specified. If both are specified, \code{knots} overrides \code{k}.
   }
