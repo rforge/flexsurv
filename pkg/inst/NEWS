@@ -1,5 +1,12 @@
 -*- text -*-
 
+[ Current development version on r-forge ] 
+
+* dgompertz,dgengamma,dgengamma.orig,dgenf,dgenf.orig fixed to return
+  -Inf instead of 0 when density is zero and log=TRUE.  Thanks to Gao
+  Zheng.
+
+
 Version 0.2 (2013-05-13)
 -------------------------
 

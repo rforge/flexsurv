@@ -7,8 +7,8 @@ library(flexsurv)
 ## for local use 
 if (0) {
     library(survival)
-    for (i in list.files("../../flexsurv/R", "*.R$")) 
-        source(paste("../../flexsurv/R/",i,sep=""))
+    for (i in list.files("../R", "*.R$")) 
+        source(paste("../R/",i,sep=""))
 }
 
 tol <- 1e-06

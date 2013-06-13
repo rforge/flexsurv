@@ -7,7 +7,7 @@
 dgenf <- function(x, mu=0, sigma=1, Q, P, log=FALSE) { 
     if (!check.genf(mu=mu, sigma=sigma, Q=Q, P=P)) return(rep(NaN, length(x)))
     ret <- numeric(length(x))
-    ret[x<=0] <- 0
+    ret[x<=0] <- if (log) -Inf else 0
     xx <- x[x>0]
     if (P==0) {
         logdens <- dgengamma(xx, mu, sigma, Q, log=TRUE)
@@ -104,7 +104,7 @@ check.genf <- function(mu, sigma, Q, P){
 dgenf.orig <- function(x, mu=0, sigma=1, s1, s2, log=FALSE) { 
     if (!check.genf.orig(mu=mu, sigma=sigma, s1=s1, s2=s2)) return(rep(NaN, length(x)))
     ret <- numeric(length(x))
-    ret[x<=0] <- 0
+    ret[x<=0] <- if (log) -Inf else 0
     xx <- x[x>0]
     w <- (log(xx) - mu)/sigma
     expw <- xx^(1/sigma)*exp(-mu/sigma)

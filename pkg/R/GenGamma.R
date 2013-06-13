@@ -3,7 +3,7 @@
 dgengamma <- function(x, mu=0, sigma=1, Q, log=FALSE) {
     if (!check.gengamma(mu=mu, sigma=sigma, Q=Q)) return(rep(NaN, length(x)))
     ret <- numeric(length(x))
-    ret[x<=0] <- 0
+    ret[x<=0] <- if (log) -Inf else 0
     xx <- x[x>0]
     if (Q != 0) { 
         y <- log(xx)
@@ -76,7 +76,7 @@ check.gengamma <- function(mu, sigma, Q){
 dgengamma.orig <- function(x, shape, scale=1, k, log=FALSE){
     if (!check.gengamma.orig(shape=shape, scale=scale, k=k)) return(rep(NaN, length(x)))
     ret <- numeric(length(x))
-    ret[x<=0] <- 0
+    ret[x<=0] <- if (log) -Inf else 0
     t <- x[x>0]
     logdens <- log(shape) - lgamma(k) + (shape*k - 1)*log(t) - shape*k*log(scale) - (t/scale)^shape 
     ret[x>0] <- if (log) logdens else exp(logdens)

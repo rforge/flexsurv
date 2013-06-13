@@ -9,7 +9,7 @@
 dgompertz <- function(x, shape, rate=1, log=FALSE) {
     if (!check.gompertz(shape=shape, rate=rate)) return(rep(NaN, length(x)))
     ret <- numeric(length(x))
-    ret[x<0] <- 0
+    ret[x<0] <- if (log) -Inf else 0
     t <- x[x>=0]
     if (shape==0) {
         logdens <- dexp(t, rate=rate, log=TRUE)
