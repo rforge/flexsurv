@@ -367,10 +367,16 @@ summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=N
         }
     }
     else if (is.null(X)) X <- as.matrix(0, nrow=1, ncol=max(ncol(dat$X),1))
-    if (is.null(t))
+    if (is.null(t)) {
         t <- sort(unique(dat$Y[,"stop"]))
-    if (is.null(start))
-        start <- dat$Y[order(dat$Y[!duplicated(dat$Y[,"stop"]),"stop"]),"start"]
+        if (is.null(start))
+            start <- dat$Y[order(dat$Y[!duplicated(dat$Y[,"stop"]),"stop"]),"start"]
+    }
+    else {
+        if (is.null(start))
+            start <- rep(0, length(t))
+        else if (length(start) != length(t)) stop("length of \"t\" is ",length(t)," but length of \"start\" is ",length(start))
+    }
     pcall <- list(q=t)
     if (!is.null(x$knots)) {
         gamma <- x$res[1:(x$k + 2),"est"]

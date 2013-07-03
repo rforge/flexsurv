@@ -6,7 +6,7 @@
   given the equivalent probability distribution function.
 }
 \usage{
-qgeneric(pdist, p, lower.tail = TRUE, log.p = FALSE, ...)
+qgeneric(pdist, p, ...)
 }
 \arguments{
   \item{pdist}{ Probability distribution function,
