@@ -443,6 +443,7 @@ summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=N
                 for (j in 1:nobs) seeta[j] <- sqrt(xd[j,] %*% x$cov %*% xd[j,])
                 lclsurv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale, offset=qnorm(1 - (1-cl)/2)*seeta)
                 uclsurv <- 1 - psurvspline(t, gamma, beta, X[i,], x$knots, x$scale, offset=-qnorm(1 - (1-cl)/2)*seeta)
+                lclsurv[t==0] <- uclsurv[t==0] <- 1 # set by hand since basis() returns -Inf for log(0)
             }
             else { lclsurv <- res.ci[,1,"surv"]; uclsurv <- res.ci[,2,"surv"] }
             if (type=="survival") {y <- surv/pobs; ly <- lclsurv; uy <- uclsurv}

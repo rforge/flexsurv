@@ -6,7 +6,11 @@ Version 0.2.1 (TO RELEASE)
 -------------------------
 
 * Default left truncation times were being set wrongly for
-  user-supplied times in summary.flexsurvreg.  These now default to 0.
+  user-supplied times in summary.flexsurvreg, giving wrong confidence
+  intervals.  These now default to 0.  
+
+* Confidence intervals set to 1 for t=0 under spline models. Thanks to
+  Paul Pynsent.
 
 * dgompertz,dgengamma,dgengamma.orig,dgenf,dgenf.orig fixed to return
   -Inf instead of 0 when density is zero and log=TRUE.  Thanks to Gao
