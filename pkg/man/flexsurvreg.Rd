@@ -2,15 +2,15 @@
 \name{flexsurvreg}
 \alias{flexsurvreg}
 \title{
-  Flexible parametric regression for time-to-event data 
+  Flexible parametric regression for time-to-event data
 }
 \description{
   Parametric regression for time-to-event data using the generalized F
   and other flexible distributions.  Users may easily extend this
-  function with their own survival distributions.   
+  function with their own survival distributions.
 }
 \usage{
-flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
+flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
 }
 \arguments{
   \item{formula}{
@@ -28,22 +28,25 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
   }
   \item{data}{
     A data frame in which to find variables supplied in \code{formula}.
-    If not given, the variables should be in the working environment. 
+    If not given, the variables should be in the working environment.
+  }
+  \item{weights}{
+    Optional vector of case weights.
   }
   \item{dist}{ Either one of the following strings identifying a
-    built-in distribution: 
+    built-in distribution:
     \tabular{ll}{
-      \code{"gengamma"} \tab Generalized gamma (stable parameterisation) \cr 
-      \code{"gengamma.orig"} \tab Generalized gamma (original parameterisation) \cr 
-      \code{"genf"} \tab Generalized F (stable parameterisation) \cr 
-      \code{"genf.orig"} \tab Generalized F (original parameterisation) \cr 
-      \code{"weibull"} \tab Weibull \cr 
+      \code{"gengamma"} \tab Generalized gamma (stable parameterisation) \cr
+      \code{"gengamma.orig"} \tab Generalized gamma (original parameterisation) \cr
+      \code{"genf"} \tab Generalized F (stable parameterisation) \cr
+      \code{"genf.orig"} \tab Generalized F (original parameterisation) \cr
+      \code{"weibull"} \tab Weibull \cr
       \code{"gamma"} \tab Gamma \cr
-      \code{"exp"} \tab Exponential \cr 
-      \code{"lnorm"} \tab Log-normal \cr 
-      \code{"gompertz"} \tab Gompertz \cr 
+      \code{"exp"} \tab Exponential \cr
+      \code{"lnorm"} \tab Log-normal \cr
+      \code{"gompertz"} \tab Gompertz \cr
     }
-    
+
     or a list specifying a custom distribution.  See section ``Custom
     distributions'' below for how to construct this list.
 
@@ -59,30 +62,30 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
     example, the "location", "scale" or "rate" parameter,
     or a log-linear model for parameters constrained to be positive.
     This gives an accelerated failure time model or a proportional
-    hazards model, depending on the distribution.  
-    
+    hazards model, depending on the distribution.
+
     Note that the Weibull parameterisation is different from that
     in \code{\link[survival]{survreg}}, instead it is
     consistent with \code{\link{dweibull}}.
     The \code{"scale"} reported by \code{\link[survival]{survreg}}
     is equivalent to \code{1/shape} as defined by
     \code{\link{dweibull}} and hence \code{\link{flexsurvreg}}.
-    The first coefficient \code{(Intercept)} reported by 
+    The first coefficient \code{(Intercept)} reported by
     \code{\link[survival]{survreg}} is equivalent to \code{log(scale)}
     in \code{\link{dweibull}} and \code{\link{flexsurvreg}}.
 
     Similarly in the exponential distribution, the rate, rather than the
-    mean, is modelled on covariates.    
+    mean, is modelled on covariates.
   }
   \item{inits}{
-    A numeric vector giving initial values for each unknown parameter. 
+    A numeric vector giving initial values for each unknown parameter.
     If not specified, default initial values are chosen from a simple
     summary of the uncensored survival time, for example the mean
     is often used to initialize scale parameters.  See the object
-    \code{flexsurv.dists} in the source for the exact methods used. 
+    \code{flexsurv.dists} in the source for the exact methods used.
     If the likelihood surface may be uneven, it is advised to run
     the optimisation starting from various different initial values
-    to ensure convergence to the true global maximum. 
+    to ensure convergence to the true global maximum.
   }
   \item{fixedpars}{Vector of indices of parameters whose values will be
     fixed at their initial values during the optimisation.  The indices
@@ -94,7 +97,7 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
     specify \code{fixedpars = c(3, 5)}
   }
   \item{cl}{ Width of symmetric confidence intervals for maximum
-    likelihood estimates, by default 0.95. 
+    likelihood estimates, by default 0.95.
   }
   \item{...}{Optional arguments to the general-purpose \R
     optimisation routine \code{\link{optim}}. Useful options include
@@ -135,12 +138,12 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
   Jackson, C. H. and Sharples, L. D. and Thompson, S. G. (2010)
   Survival models in health economic evaluations: balancing fit and
   parsimony to improve prediction. International Journal of Biostatistics
-  6(1):Article 34. 
+  6(1):Article 34.
 
   Cox, C. (2008) The generalized \eqn{F} distribution: An umbrella for
   parametric survival analysis.  Statistics in Medicine 27:4301-4312.
 
-  Cox, C., Chu, H., Schneider, M. F. and Muñoz, A. (2007) 
+  Cox, C., Chu, H., Schneider, M. F. and Muñoz, A. (2007)
   Parametric survival analysis and taxonomy of hazard functions for the
   generalized gamma distribution.  Statistics in Medicine 26:4252-4374
 }
@@ -164,12 +167,12 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
       Arguments other than parameters must be named in the conventional
       way -- for example \code{x} for the first argument of the density
       function, as in \code{\link{dnorm}(x, ...)} and \code{q} for the first
-      argument of the probability function. 
-    } 
+      argument of the probability function.
+    }
     \item{\code{pars}:}{Vector of strings naming the parameters of the
-      distribution. These must be the same names as the arguments of the 
-      density and probability functions. 
-    } 
+      distribution. These must be the same names as the arguments of the
+      density and probability functions.
+    }
     \item{\code{location}:}{Name of the parameter which can be modelled as a linear
       function of covariates, possibly after transformation.}
     \item{\code{transforms}:}{Vector of R functions which transform the range of
@@ -182,7 +185,7 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
       likelihood estimation of each parameter.  For example,
       \code{function(t){ c(1, mean(t)) }} will always initialize the first
       of two parameters at 1, and the second (a scale
-      parameter, for instance) at the mean of \code{t}. 
+      parameter, for instance) at the mean of \code{t}.
     }
   }
 
@@ -191,11 +194,11 @@ flexsurvreg(formula, data, dist, inits, fixedpars=NULL, cl=0.95,...)
   provides conventionally-defined density and probability functions called
   \code{\link[eha]{dllogis}} and \code{\link[eha]{pllogis}}.  See the
   Examples below for the custom list in this case, and the
-  subsequent command to fit the model. 
+  subsequent command to fit the model.
 }
 \seealso{
   \code{\link{flexsurvspline}} for flexible survival modelling using the
-  spline model of Royston and Parmar. 
+  spline model of Royston and Parmar.
 
   \code{\link{plot.flexsurvreg}} and \code{\link{lines.flexsurvreg}} to
   plot fitted survival, hazards and cumulative hazards from models fitted
@@ -211,10 +214,10 @@ fitw
 plot(fitg)
 lines(fitw, col="blue", lwd.ci=1, lty.ci=1)
 ## Identical AIC, probably not enough data in this simple example for a
-## very flexible model to be worthwhile. 
+## very flexible model to be worthwhile.
 
-## Custom distribution 
-library(eha)  ## make "dllogis" and "pllogis" available to the working environment 
+## Custom distribution
+library(eha)  ## make "dllogis" and "pllogis" available to the working environment
 custom.llogis <- list(name="llogis",
                       pars=c("shape","scale"),
                       location="scale",

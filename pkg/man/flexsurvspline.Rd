@@ -8,7 +8,7 @@
   model of Royston and Parmar (2002).
 }
 \usage{
-flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL,
+flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", weights, inits=NULL,
                fixedpars=NULL, cl=0.95,...)
 }
 \arguments{
@@ -29,7 +29,7 @@ flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL,
     A data frame in which to find variables supplied in \code{formula}.
     If not given, the variables should be in the working environment.
   }
-  \item{k}{    
+  \item{k}{
     Number of knots in the spline. The default \code{k=0} gives
     a Weibull, log-logistic or lognormal model, if \code{"scale"} is
     \code{"hazard"}, \code{"odds"} or \code{"normal"} respectively.  \code{k} is equivalent
@@ -55,6 +55,9 @@ flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", inits=NULL,
     If \code{"normal"}, \eqn{-\Phi^{-1}(S(t))}{-InvPhi(S(t))} is modelled as a spline
     function of log time, where \eqn{\Phi^{-1}()}{InvPhi()} is the
     inverse normal distribution function \code{\link{qnorm}}.
+  }
+  \item{weights}{
+    Optional vector of case weights.
   }
   \item{inits}{
     A numeric vector giving initial values for each unknown parameter.

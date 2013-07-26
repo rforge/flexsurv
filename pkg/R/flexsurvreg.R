@@ -84,7 +84,7 @@ flexsurv.dists <- list(
                        )
 
 
-minusloglik.flexsurv <- function(optpars, Y, X=0, dlist, inits, trunc, fixedpars=NULL) {
+minusloglik.flexsurv <- function(optpars, Y, X=0, weights, dlist, inits, trunc, fixedpars=NULL) {
     pars <- inits
     npars <- length(pars)
     pars[setdiff(1:npars, fixedpars)] <- optpars
@@ -106,10 +106,11 @@ minusloglik.flexsurv <- function(optpars, Y, X=0, dlist, inits, trunc, fixedpars
     probfn <- paste("p",dlist$name,sep="")
     densfn <- paste("d",dlist$name,sep="")
     ## Generic survival model likelihood
-    logdens <- do.call(densfn, dcall)[Y[,"status"]==1]
-    prob <- do.call(probfn, pcall)[Y[,"status"]==0]
+    dead <- Y[,"status"]==1
+    logdens <- (do.call(densfn, dcall)*weights)[dead]
+    prob <- (do.call(probfn, pcall))[!dead]
     pobs <- 1 - do.call(probfn, tcall) # prob of being observed = 1 unless left-truncated
-    - ( sum(logdens) + sum(log(1 - prob)) - sum(log(pobs)))
+    - ( sum(logdens) + sum(log(1 - prob)*weights[!dead]) - sum(log(pobs)*weights))
 }
 
 check.dlist <- function(dlist){
@@ -138,7 +139,7 @@ check.dlist <- function(dlist){
     dlist
 }
 
-flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95, ...)
+flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95, ...)
 {
     call <- match.call()
     indx <- match(c("formula", "data"), names(call), nomatch = 0)
@@ -159,6 +160,8 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95, ...
     X <- model.matrix(Terms, m)
     dat <- list(Y=Y, X=X[,-1,drop=FALSE], Xraw=m[,-1,drop=FALSE])
     X <- dat$X
+    if (missing(weights)) weights <- rep(1, nrow(X))
+    else if (length(weights)!=nrow(X)) stop("expected \"weights\" vector of length ", nrow(X), " = number of observations")
     if (missing(dist)) stop("Distribution \"dist\" not specified")
     if (is.character(dist)) {
         match.arg(dist, names(flexsurv.dists))
@@ -177,7 +180,7 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95, ...
     if (!missing(inits) && (!is.numeric(inits) || (length(inits) != npars)))
         stop("inits must be a numeric vector of length ",npars)
     if (missing(inits) || any(is.na(inits)))
-        default.inits <- c(dlist$inits(Y[,"time"]), rep(0,ncoveffs))
+        default.inits <- c(dlist$inits(Y[,"time"]*weights*length(Y[,"time"])/sum(weights)), rep(0,ncoveffs))
     if (missing(inits)) inits <- default.inits
     else if (any(is.na(inits))) inits[is.na(inits)] <- default.inits[is.na(inits)]
     for (i in 1:nbpars)
@@ -198,7 +201,7 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95, ...
     deriv.supported <- c("exp","weibull","gompertz")
     if ((is.logical(fixedpars) && fixedpars==TRUE) ||
         (is.numeric(fixedpars) && all(fixedpars == 1:npars))) {
-        minusloglik <- minusloglik.flexsurv(inits, Y=Y, X=X, dlist=dlist, inits=inits)
+        minusloglik <- minusloglik.flexsurv(inits, Y=Y, X=X, weights=weights, dlist=dlist, inits=inits)
         for (i in 1:nbpars)
             inits[i] <- dlist$inv.transforms[[i]](inits[i])
         res <- matrix(inits, ncol=1)
@@ -215,7 +218,7 @@ flexsurvreg <- function(formula, data, dist, inits, fixedpars=NULL, cl=0.95, ...
             optim.args$method <- "BFGS"
         gr <- if (dlist$name %in% deriv.supported) Dminusloglik.flexsurv else NULL
         optim.args <- c(optim.args, list(par=optpars, fn=minusloglik.flexsurv, gr=gr,
-                                         Y=Y, X=X, dlist=dlist,
+                                         Y=Y, X=X, weights=weights, dlist=dlist,
                                          inits=inits, fixedpars=fixedpars, hessian=TRUE))
         opt <- do.call("optim", optim.args)
         est <- opt$par

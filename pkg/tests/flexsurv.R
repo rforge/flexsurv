@@ -26,12 +26,12 @@ fitffix <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data 
                        fixedpars=4, inits=c(NA,NA,NA,1e-05))
 test(fitffix$res[1:3,"est"], fitg$res[1:3,"est"], tol=1e-03)
 test(fitffix$res[1:3,2:3], fitg$res[1:3,2:3], tol=1e-03)
+
+wt <- rep(1, nrow(ovarian)) # ; wt[c(1,3,5,7,9)] <- 10
 ## Weibull
-fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
-                    data = ovarian, dist="weibull")
+fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="weibull", weights=wt)
 ## Weibull with library(survival)
-fitws <- survreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1,
-                 data = ovarian, dist="weibull")
+fitws <- survreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="weibull", weights=wt)
 test(fitw$loglik, fitws$loglik[1], tol=1e-04)
 test(fitws$scale, 1 / fitw$res["shape","est"], tol=1e-03)
 test(as.numeric(coef(fitws)[1]), log(fitw$res["scale","est"]), tol=1e-03)

@@ -3,7 +3,7 @@
 ## dloglik/dp  = sum (df/dp / f(p)) | xobs) + sum(dS/dp / S(p) | xcens) - sum(dS/dp / S(p) | xtrunc)
 ##             = sum(dlogf/dp | xobs) + sum(dlogS/dp | xcens) - sum(dlogS/dp | xtrunc)
 
-Dminusloglik.flexsurv <- function(optpars, Y, X=0, dlist, inits, trunc, fixedpars=NULL) {
+Dminusloglik.flexsurv <- function(optpars, Y, X=0, weights, dlist, inits, trunc, fixedpars=NULL) {
     pars <- inits
     npars <- length(pars)
     pars[setdiff(1:npars, fixedpars)] <- optpars
@@ -28,9 +28,9 @@ Dminusloglik.flexsurv <- function(optpars, Y, X=0, dlist, inits, trunc, fixedpar
                     dlist$inv.transforms[[i]](pars[[i]])
     ddcall[[dlist$location]] <- ddcall[[dlist$location]][dead]
     dsccall[[dlist$location]] <- dsccall[[dlist$location]][!dead]
-    dd <- do.call(ddfn, ddcall)
-    dscens <- do.call(dsfn, dsccall)
-    dstrunc <- do.call(dsfn, dstcall)
+    dd <- do.call(ddfn, ddcall) * weights[dead]
+    dscens <- do.call(dsfn, dsccall) * weights[!dead]
+    dstrunc <- do.call(dsfn, dstcall) * weights
     res <- - ( colSums(dd) + colSums(dscens) - colSums(dstrunc) )
     ## currently wastefully calculates derivs for fixed pars then discards them
     res[setdiff(1:npars, fixedpars)]
@@ -106,7 +106,7 @@ DLSgompertz <- function(t, shape, rate, X, ncovs){
 
 ## Spline
 
-Dminusloglik.stpm <- function(optpars, knots, Y, X=0, inits, fixedpars=NULL, scale="hazard"){
+Dminusloglik.stpm <- function(optpars, knots, Y, X=0, weights, inits, fixedpars=NULL, scale="hazard"){
     pars <- inits
     npars <- length(pars)
     pars[setdiff(1:npars, fixedpars)] <- optpars
@@ -117,8 +117,8 @@ Dminusloglik.stpm <- function(optpars, knots, Y, X=0, inits, fixedpars=NULL, sca
     }
     else {beta <- 0; X <- matrix(0, nrow=nrow(Y))}
     dead <- Y[,"status"]==1
-    dd <- DLdsurvspline(Y[dead,"stop"], gamma, beta, X[dead,,drop=FALSE], knots, scale)
-    dscens <- DLSsurvspline(Y[!dead,"stop"], gamma, beta, X[!dead,,drop=FALSE], knots, scale)
+    dd <- DLdsurvspline(Y[dead,"stop"], gamma, beta, X[dead,,drop=FALSE], knots, scale) * weights[dead]
+    dscens <- DLSsurvspline(Y[!dead,"stop"], gamma, beta, X[!dead,,drop=FALSE], knots, scale) * weights[!dead]
     dstrunc <- DLSsurvspline(Y[,"start"], gamma, beta, X[,,drop=FALSE], knots, scale)
     res <- - ( colSums(dd) + colSums(dscens) - colSums(dstrunc) )
     res[setdiff(1:npars, fixedpars)]
