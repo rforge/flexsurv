@@ -83,8 +83,7 @@ flexsurv.dists <- list(
                        )
                        )
 
-
-minusloglik.flexsurv <- function(optpars, Y, X=0, weights, dlist, inits, trunc, fixedpars=NULL) {
+minusloglik.flexsurv <- function(optpars, Y, X=0, weights, dlist, inits, mx, fixedpars=NULL) {
     pars <- inits
     npars <- length(pars)
     pars[setdiff(1:npars, fixedpars)] <- optpars
@@ -92,16 +91,21 @@ minusloglik.flexsurv <- function(optpars, Y, X=0, weights, dlist, inits, trunc, 
     pars <- as.list(pars)
     if (npars > nbpars) {
         beta <- unlist(pars[(nbpars+1):npars])
-        pars[[dlist$location]] <- pars[[dlist$location]] + X %*% beta
+        for (i in dlist$pars)
+            pars[[i]] <- pars[[i]] + X[,mx[[i]],drop=FALSE] %*% beta[mx[[i]]]
+#        pars[[dlist$location]] <- pars[[dlist$location]] + X %*% beta
     }
     pcall <- list(q=Y[,"stop"])
     dcall <- list(x=Y[,"stop"])
     tcall <- list(q=Y[,"start"])
-    for (i in 1:nbpars)
+    for (i in 1:nbpars){
         pcall[[names(pars)[i]]] <-
             dcall[[names(pars)[i]]] <-
                 tcall[[names(pars)[i]]] <-
                     dlist$inv.transforms[[i]](pars[[i]])
+#        if (is.infinite(dlist$inv.transforms[[i]](pars[[i]])))
+#            return(Inf)
+    }
     dcall$log <- TRUE
     probfn <- paste("p",dlist$name,sep="")
     densfn <- paste("d",dlist$name,sep="")
@@ -142,26 +146,6 @@ check.dlist <- function(dlist){
 flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95, ...)
 {
     call <- match.call()
-    indx <- match(c("formula", "data"), names(call), nomatch = 0)
-    if (indx[1] == 0)
-        stop("A \"formula\" argument is required")
-    temp <- call[c(1, indx)]
-    temp[[1]] <- as.name("model.frame")
-    m <- eval(temp, parent.frame())
-    Y <- model.extract(m, "response")
-    if (!inherits(Y, "Surv"))
-        stop("Response must be a survival object")
-    if (!(attr(Y, "type")  %in% c("right","counting")))
-        stop("Survival object type \"", attr(Y, "type"), "\"", " not supported")
-    if (attr(Y, "type") == "counting")
-        Y <- cbind(Y, time=Y[,"stop"] - Y[,"start"]) # converts Y from Surv object to numeric matrix
-    else Y <- cbind(Y, start=0, stop=Y[,"time"])
-    Terms <- attr(m, "terms")
-    X <- model.matrix(Terms, m)
-    dat <- list(Y=Y, X=X[,-1,drop=FALSE], Xraw=m[,-1,drop=FALSE])
-    X <- dat$X
-    if (missing(weights)) weights <- rep(1, nrow(X))
-    else if (length(weights)!=nrow(X)) stop("expected \"weights\" vector of length ", nrow(X), " = number of observations")
     if (missing(dist)) stop("Distribution \"dist\" not specified")
     if (is.character(dist)) {
         match.arg(dist, names(flexsurv.dists))
@@ -173,6 +157,45 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
     }
     else stop("\"dist\" should be a string for a built-in distribution, or a list for a custom distribution")
     parnames <- dlist$pars
+    ancnames <- setdiff(parnames, dlist$location)
+
+    indx <- match(c("formula", "data"), names(call), nomatch = 0)
+    if (indx[1] == 0)
+        stop("A \"formula\" argument is required")
+    temp <- call[c(1, indx)]
+    temp[[1]] <- as.name("model.frame")
+    ## local environment to facilitate formulae for covariates on ancillary parameters.  Thanks to Milan Bouchet-Valat.
+    tmpenv <- new.env(parent=environment(formula))
+    f2 <- formula
+    environment(f2) <- tmpenv
+    temp[["formula"]] <- f2    
+    for (i in ancnames)
+        assign(i, identity, envir=tmpenv)
+    m <- eval(temp, parent.frame())
+    Terms <- terms(formula, ancnames)
+    X <- model.matrix(Terms, m)
+    inds <- attr(Terms, "specials")
+    ass <- attributes(X)$assign + 1
+    ancidx <- lapply(inds, function(x){which(ass %in% x) - 1})
+    names(ancidx) <- ancnames
+    X <- X[,-1,drop=FALSE]
+    locidx <- setdiff(seq_len(ncol(X)), unlist(ancidx))
+    mx <- c(list(locidx), ancidx); names(mx)[1] <- dlist$location
+    mx <- mx[parnames] # sort in original order
+    
+    Y <- model.extract(m, "response")
+    if (!inherits(Y, "Surv"))
+        stop("Response must be a survival object")
+    if (!(attr(Y, "type")  %in% c("right","counting")))
+        stop("Survival object type \"", attr(Y, "type"), "\"", " not supported")
+    if (attr(Y, "type") == "counting")
+        Y <- cbind(Y, time=Y[,"stop"] - Y[,"start"]) # converts Y from Surv object to numeric matrix
+    else Y <- cbind(Y, start=0, stop=Y[,"time"])
+
+    dat <- list(Y=Y, X=X, Xraw=m[,-1,drop=FALSE])
+    X <- dat$X
+    if (missing(weights)) weights <- rep(1, nrow(X))
+    else if (length(weights)!=nrow(X)) stop("expected \"weights\" vector of length ", nrow(X), " = number of observations")
     ncovs <- ncol(dat$Xraw)
     ncoveffs <- ncol(X)
     nbpars <- length(parnames) # number of baseline parameters
@@ -201,7 +224,7 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
     deriv.supported <- c("exp","weibull","gompertz")
     if ((is.logical(fixedpars) && fixedpars==TRUE) ||
         (is.numeric(fixedpars) && all(fixedpars == 1:npars))) {
-        minusloglik <- minusloglik.flexsurv(inits, Y=Y, X=X, weights=weights, dlist=dlist, inits=inits)
+        minusloglik <- minusloglik.flexsurv(inits, Y=Y, X=X, weights=weights, dlist=dlist, inits=inits, mx=mx)
         for (i in 1:nbpars)
             inits[i] <- dlist$inv.transforms[[i]](inits[i])
         res <- matrix(inits, ncol=1)
@@ -219,7 +242,8 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
         gr <- if (dlist$name %in% deriv.supported) Dminusloglik.flexsurv else NULL
         optim.args <- c(optim.args, list(par=optpars, fn=minusloglik.flexsurv, gr=gr,
                                          Y=Y, X=X, weights=weights, dlist=dlist,
-                                         inits=inits, fixedpars=fixedpars, hessian=TRUE))
+                                         inits=inits, mx=mx, fixedpars=fixedpars,
+                                         hessian=TRUE))
         opt <- do.call("optim", optim.args)
         est <- opt$par
         if (all(!is.na(opt$hessian)) && all(!is.nan(opt$hessian)) && all(is.finite(opt$hessian)) &&
@@ -233,7 +257,7 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
         }
         else {
             warning("Optimisation has probably not converged to the maximum likelihood - Hessian is not positive definite. ")
-            lcl <- ucl <- NA
+            cov <- lcl <- ucl <- NA
         }
         res <- cbind(est=inits, lcl=NA, ucl=NA)
         res[setdiff(1:npars, fixedpars),] <- cbind(est, lcl, ucl)
@@ -243,7 +267,7 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
             res[i,] <- dlist$inv.transforms[[i]](res[i,])
         ret <- list(call=match.call(), dlist=dlist, res=res, res.t=res.t, cov=cov,
                     npars=length(est), fixedpars=fixedpars, optpars=setdiff(1:npars, fixedpars),
-                    ncovs=ncovs, ncoveffs=ncoveffs, basepars=1:nbpars, covpars=(nbpars+1):npars,
+                    mx=mx, ncovs=ncovs, ncoveffs=ncoveffs, basepars=1:nbpars, covpars=(nbpars+1):npars,
                     loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,
                     data = dat, datameans = colMeans(dat$X),
                     N=nrow(dat$Y), events=sum(dat$Y[,"status"]), trisk=sum(dat$Y[,"time"]))
@@ -271,9 +295,10 @@ cisumm.flexsurvreg <- function(x, t, start, X, B=1000, cl=0.95) {
             for (j in x$dlist$pars)
                 pcall[[j]] <- sim[i,j]
             beta <- if (x$ncoveffs==0) 0 else sim[i, x$covpars]
-            pcall[[x$dlist$location]] <- pcall[[x$dlist$location]] + X %*% beta
-            for (j in seq(along=x$dlist$pars))
+            for (j in seq(along=x$dlist$pars)){
+                pcall[[x$dlist$pars[j]]] <- pcall[[x$dlist$pars[j]]] + X[x$mx[[j]]] %*% beta[x$mx[[j]]]
                 pcall[[x$dlist$pars[j]]] <- x$dlist$inv.transforms[[j]](pcall[[x$dlist$pars[j]]])
+            }
             probfn <- paste("p",x$dlist$name,sep="")
             surv <- 1 - do.call(probfn, pcall)
             dcall <- tcall <- pcall
@@ -327,21 +352,24 @@ cisumm.spline <- function(x, t, start, X, B=1000, cl=0.95) {
 
 print.flexsurvreg <- function(x, ...)
 {
-    covs <- names(x$covmeans)
+    covmeans <- colMeans(x$data$X)
+    covs <- names(covmeans)
     covinds <- match(covs, rownames(x$res))
     cat("\nCall:\n", deparse(x$call), "\n\n", sep = "")
-    res <- signif(x$res, 3)
-    cat ("Maximum likelihood estimates: \n")
-    if (any(covinds)) {
-        ecoefs <- matrix(NA, nrow=nrow(x$res), ncol=3)
-        colnames(ecoefs) <- c("exp(est)", colnames(res)[2:3])
-        means <- rep(NA,nrow(x$res))
-        ecoefs[covinds,] <- signif(exp(x$res[covinds,,drop=FALSE]), 3)
-        means[covinds] <- signif(x$covmeans, 3)
-        res <- cbind(means, res, ecoefs)
-        colnames(res)[1] <- "data mean"
+    if (x$npars > 0) { 
+        res <- signif(x$res, 3)
+        cat ("Estimates: \n")
+        if (any(covinds)) {
+            ecoefs <- matrix(NA, nrow=nrow(x$res), ncol=3)
+            colnames(ecoefs) <- c("exp(est)", colnames(res)[2:3])
+            means <- rep(NA,nrow(x$res))
+            ecoefs[covinds,] <- signif(exp(x$res[covinds,1:3,drop=FALSE]), 3)
+            means[covinds] <- signif(covmeans, 3)
+            res <- cbind(means, res, ecoefs)
+            colnames(res)[1] <- "data mean"
+        }
+        print(res, quote=FALSE, na.print="")
     }
-    print(res, quote=FALSE, na.print="")
     cat("\nN = ", x$N, ",  Events: ", x$events,
         ",  Censored: ", x$N - x$events,
         "\nTotal time at risk: ", x$trisk,
@@ -400,12 +428,12 @@ summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=N
     names(ret) <- rownames(X)
     for (i in 1:nrow(X)) {
         if (is.null(x$knots)) {
-            for (j in dlist$pars)
-                pcall[[j]] <- x$res[j,"est"]
-            mupar <- which(dlist$pars==dlist$location)
-            mu <- dlist$transforms[[mupar]](pcall[[dlist$location]])
-            mu <- mu + X[i,] %*% beta
-            pcall[[dlist$location]] <- dlist$inv.transforms[[mupar]](mu)
+            for (j in seq(along=dlist$pars)) { 
+                pcall[[dlist$pars[j]]] <- x$res[dlist$pars[j],"est"]
+                mu <- dlist$transforms[[j]](pcall[[dlist$pars[j]]])
+                mu <- mu + X[i,x$mx[[j]],drop=FALSE] %*% beta[x$mx[[j]]]
+                pcall[[dlist$pars[j]]] <- dlist$inv.transforms[[j]](mu)
+            }
             probfn <- paste("p",dlist$name,sep="")
             prob <- do.call(probfn, pcall)
             tcall <- pcall; tcall$q <- start

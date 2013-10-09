@@ -21,10 +21,27 @@ flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
 
     \code{Surv(time, dead) ~ age + sex}
 
-    If there are no covariates, specify \code{1} on the right hand side,
-    for example \code{Surv(time, dead) ~ 1}.   Only \code{Surv} objects
+    Only \code{Surv} objects
     of \code{type="right"} or \code{type="counting"}, corresponding to
     right-censored and/or left-truncated observations, are supported.
+
+    If there are no covariates, specify \code{1} on the right hand side,
+    for example \code{Surv(time, dead) ~ 1}.  
+
+    By default, covariates are placed on the ``location'' parameter of
+    the distribution, typically the "scale" or "rate" parameter, through
+    a linear model, or a log-linear model if this parameter must be
+    positive.  This gives an accelerated failure time model or a
+    proportional hazards model, depending on the distribution.
+
+    Covariates can be placed on other parameters by using the name of
+    the parameter as a function in the formula.  For example, in a
+    Weibull model, the following expresses the scale parameter in terms
+    of age and a treatment variable \code{treat}, and the shape
+    parameter in terms of sex and treatment.
+
+    \code{Surv(time, dead) ~ age + treat + shape(sex) + shape(treatment)}
+    
   }
   \item{data}{
     A data frame in which to find variables supplied in \code{formula}.
@@ -57,12 +74,7 @@ flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
     \code{\link{dweibull}}, \code{\link{dgamma}}, \code{\link{dexp}},
     \code{\link{dlnorm}}, \code{\link{dgompertz}}, respectively.  The
     functions in base R are used where available, otherwise, they are
-    provided in this package.  Covariates are included through a linear
-    model on the parameter of the distribution which determines its mean, for
-    example, the "location", "scale" or "rate" parameter,
-    or a log-linear model for parameters constrained to be positive.
-    This gives an accelerated failure time model or a proportional
-    hazards model, depending on the distribution.
+    provided in this package.  
 
     Note that the Weibull parameterisation is different from that
     in \code{\link[survival]{survreg}}, instead it is

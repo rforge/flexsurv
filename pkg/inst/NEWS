@@ -1,5 +1,21 @@
 -*- text -*-
 
+Version 0.2.3 (2013-10-09)
+-------------------------
+
+* Parameters other than the location parameter can now have covariates
+  on them in flexsurvreg.  Thanks to Milan Bouchet-Valat for help with
+  this.
+
+* Distribution functions for generalized gamma, generalized F, and
+  Gompertz, now allow all parameters to be vectorised.
+
+* Bug fix in analytic derivatives for Weibull.
+
+* Restored print output introduced in 0.1.2 which had been
+  accidentally removed in 0.1.5.
+
+
 Version 0.2.2 (2013-07-26)
 -------------------------
 

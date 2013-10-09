@@ -176,6 +176,8 @@ dsurvspline <- function(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", 
     as.numeric(dens)
 }
 
+## TODO can ns from splines package be used for these
+
 basis <- function(knots, x) {
     nk <- length(knots)
     lam <- (knots[nk] - knots)/(knots[nk] - knots[1])
