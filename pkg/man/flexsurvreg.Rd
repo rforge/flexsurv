@@ -10,7 +10,7 @@
   function with their own survival distributions.
 }
 \usage{
-flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
+flexsurvreg(formula, data, weights, subset, na.action, dist, inits, fixedpars=NULL, cl=0.95,...)
 }
 \arguments{
   \item{formula}{
@@ -26,7 +26,7 @@ flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
     right-censored and/or left-truncated observations, are supported.
 
     If there are no covariates, specify \code{1} on the right hand side,
-    for example \code{Surv(time, dead) ~ 1}.  
+    for example \code{Surv(time, dead) ~ 1}.
 
     By default, covariates are placed on the ``location'' parameter of
     the distribution, typically the "scale" or "rate" parameter, through
@@ -41,7 +41,7 @@ flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
     parameter in terms of sex and treatment.
 
     \code{Surv(time, dead) ~ age + treat + shape(sex) + shape(treatment)}
-    
+
   }
   \item{data}{
     A data frame in which to find variables supplied in \code{formula}.
@@ -49,6 +49,13 @@ flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
   }
   \item{weights}{
     Optional vector of case weights.
+  }
+  \item{subset}{
+    Vector of integer or logicals specifying the subset of the
+    observations to be used in the fit.
+  }
+  \item{na.action}{a missing-data filter function, applied after any
+    'subset' argument has been used. Default is 'options()$na.action'.
   }
   \item{dist}{ Either one of the following strings identifying a
     built-in distribution:
@@ -74,7 +81,7 @@ flexsurvreg(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95,...)
     \code{\link{dweibull}}, \code{\link{dgamma}}, \code{\link{dexp}},
     \code{\link{dlnorm}}, \code{\link{dgompertz}}, respectively.  The
     functions in base R are used where available, otherwise, they are
-    provided in this package.  
+    provided in this package.
 
     Note that the Weibull parameterisation is different from that
     in \code{\link[survival]{survreg}}, instead it is

@@ -143,7 +143,7 @@ check.dlist <- function(dlist){
     dlist
 }
 
-flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=0.95, ...)
+flexsurvreg <- function(formula, data, weights, subset, na.action, dist, inits, fixedpars=NULL, cl=0.95, ...)
 {
     call <- match.call()
     if (missing(dist)) stop("Distribution \"dist\" not specified")
@@ -159,7 +159,7 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
     parnames <- dlist$pars
     ancnames <- setdiff(parnames, dlist$location)
 
-    indx <- match(c("formula", "data"), names(call), nomatch = 0)
+    indx <- match(c("formula", "data", "subset", "na.action"), names(call), nomatch = 0)
     if (indx[1] == 0)
         stop("A \"formula\" argument is required")
     temp <- call[c(1, indx)]
@@ -168,7 +168,7 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
     tmpenv <- new.env(parent=environment(formula))
     f2 <- formula
     environment(f2) <- tmpenv
-    temp[["formula"]] <- f2    
+    temp[["formula"]] <- f2
     for (i in ancnames)
         assign(i, identity, envir=tmpenv)
     m <- eval(temp, parent.frame())
@@ -182,7 +182,7 @@ flexsurvreg <- function(formula, data, weights, dist, inits, fixedpars=NULL, cl=
     locidx <- setdiff(seq_len(ncol(X)), unlist(ancidx))
     mx <- c(list(locidx), ancidx); names(mx)[1] <- dlist$location
     mx <- mx[parnames] # sort in original order
-    
+
     Y <- model.extract(m, "response")
     if (!inherits(Y, "Surv"))
         stop("Response must be a survival object")
@@ -356,7 +356,7 @@ print.flexsurvreg <- function(x, ...)
     covs <- names(covmeans)
     covinds <- match(covs, rownames(x$res))
     cat("\nCall:\n", deparse(x$call), "\n\n", sep = "")
-    if (x$npars > 0) { 
+    if (x$npars > 0) {
         res <- signif(x$res, 3)
         cat ("Estimates: \n")
         if (any(covinds)) {
@@ -428,7 +428,7 @@ summary.flexsurvreg <- function(object, X=NULL, type="survival", t=NULL, start=N
     names(ret) <- rownames(X)
     for (i in 1:nrow(X)) {
         if (is.null(x$knots)) {
-            for (j in seq(along=dlist$pars)) { 
+            for (j in seq(along=dlist$pars)) {
                 pcall[[dlist$pars[j]]] <- x$res[dlist$pars[j],"est"]
                 mu <- dlist$transforms[[j]](pcall[[dlist$pars[j]]])
                 mu <- mu + X[i,x$mx[[j]],drop=FALSE] %*% beta[x$mx[[j]]]

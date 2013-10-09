@@ -1,7 +1,7 @@
-flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", weights, inits=NULL, fixedpars=NULL, cl=0.95, ...)
+flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", weights, subset, na.action, inits=NULL, fixedpars=NULL, cl=0.95, ...)
 {
     call <- match.call()
-    indx <- match(c("formula", "data"), names(call), nomatch = 0)
+    indx <- match(c("formula", "data", "subset", "na.action"), names(call), nomatch = 0)
     if (indx[1] == 0)
         stop("A \"formula\" argument is required")
     temp <- call[c(1, indx)]

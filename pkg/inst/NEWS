@@ -7,6 +7,8 @@ Version 0.2.3 (2013-10-09)
   on them in flexsurvreg.  Thanks to Milan Bouchet-Valat for help with
   this.
 
+* subset and na.action arguments in flexsurvreg and flexsurvspline.
+
 * Distribution functions for generalized gamma, generalized F, and
   Gompertz, now allow all parameters to be vectorised.
 

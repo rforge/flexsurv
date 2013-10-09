@@ -8,8 +8,8 @@
   model of Royston and Parmar (2002).
 }
 \usage{
-flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", weights, inits=NULL,
-               fixedpars=NULL, cl=0.95,...)
+flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", weights,
+               subset, na.action, inits=NULL, fixedpars=NULL, cl=0.95,...)
 }
 \arguments{
   \item{formula}{
@@ -58,6 +58,13 @@ flexsurvspline(formula, data, k=0, knots=NULL, scale="hazard", weights, inits=NU
   }
   \item{weights}{
     Optional vector of case weights.
+  }
+  \item{subset}{
+    Vector of integer or logicals specifying the subset of the
+    observations to be used in the fit.
+  }
+  \item{na.action}{a missing-data filter function, applied after any
+    'subset' argument has been used. Default is 'options()$na.action'.
   }
   \item{inits}{
     A numeric vector giving initial values for each unknown parameter.
