@@ -148,7 +148,11 @@ flexsurvreg(formula, data, weights, subset, na.action, dist, inits, fixedpars=NU
   \item{call}{A copy of the function call, for use in post-processing.}
 \item{dlist}{List defining the survival distribution used.}
 \item{res}{Matrix of maximum likelihood estimates and confidence
-  limits.}
+  limits, with parameters on their natural scales.}
+\item{res.t}{Matrix of maximum likelihood estimates and confidence
+  limits, with parameters all transformed to the real line.  The \code{\link{coef}},
+  \code{\link{vcov}} and \code{\link{confint}} methods for
+  \code{flexsurvreg} objects work on this scale.}
 \item{loglik}{Log-likelihood}
 \item{AIC}{Akaike's information criterion (-2*log likelihood + 2*number of
   estimated parameters)}

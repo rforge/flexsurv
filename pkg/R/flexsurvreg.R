@@ -271,7 +271,7 @@ flexsurvreg <- function(formula, data, weights, subset, na.action, dist, inits, 
         for (i in 1:nbpars) # results on natural scale
             res[i,] <- dlist$inv.transforms[[i]](res[i,])
         ret <- list(call=match.call(), dlist=dlist, res=res, res.t=res.t, cov=cov,
-                    coefficients=res[,"est"],
+                    coefficients=res.t[,"est"],
                     npars=length(est), fixedpars=fixedpars, optpars=setdiff(1:npars, fixedpars),
                     mx=mx, ncovs=ncovs, ncoveffs=ncoveffs, basepars=1:nbpars, covpars=(nbpars+1):npars,
                     loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,
