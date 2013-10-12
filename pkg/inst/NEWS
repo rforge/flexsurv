@@ -9,6 +9,8 @@ Version 0.2.3 (2013-10-09)
 
 * subset and na.action arguments in flexsurvreg and flexsurvspline.
 
+* coef, vcov and confint methods for all fitted model objects.
+
 * Distribution functions for generalized gamma, generalized F, and
   Gompertz, now allow all parameters to be vectorised.
 

@@ -100,6 +100,7 @@ flexsurvspline <- function(formula, data, k=0, knots=NULL, scale="hazard", weigh
         res[setdiff(1:npars, fixedpars),] <- cbind(est, lcl, ucl, se)
         colnames(res) <- c("est", paste(c("L","U"), round(cl*100), "%", sep=""), "se")
         ret <- list(call=match.call(), k=k, knots=knots, scale=scale, res=res, cov=cov,
+                    coefficients=res[,"est"],
                     npars=length(est), fixedpars=fixedpars, optpars=setdiff(1:npars, fixedpars),
                     ncovs=ncovs, ncoveffs=ncoveffs,
                     loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,

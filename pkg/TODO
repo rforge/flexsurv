@@ -1,3 +1,5 @@
+more S3 methods as survreg: model.frame, model.matrix, predict, residuals
+
 MLE for Poly-Weibull and other poly-hazard models (make generic flexsurvpoly(base="weibull", ncause)  )
 dpqr for poly-hazard, dpolyhaz(base="weibull", ncause)
 

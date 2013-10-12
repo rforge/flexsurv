@@ -28,6 +28,7 @@ test(fitffix$res[1:3,"est"], fitg$res[1:3,"est"], tol=1e-03)
 test(fitffix$res[1:3,2:3], fitg$res[1:3,2:3], tol=1e-03)
 
 wt <- rep(1, nrow(ovarian)) # ; wt[c(1,3,5,7,9)] <- 10
+
 ## Weibull
 fitw <- flexsurvreg(formula = Surv(ovarian$futime, ovarian$fustat) ~ 1, data = ovarian, dist="weibull", weights=wt)
 ## Weibull with library(survival)

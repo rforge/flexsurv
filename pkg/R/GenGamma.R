@@ -50,6 +50,7 @@ pgengamma <- function(q, mu=0, sigma=1, Q, lower.tail = TRUE, log.p = FALSE) {
     if (!lower.tail) prob <- 1 - prob
     if (log.p) prob <- log(prob)
     ret[ind] <- prob
+    ret
 }
 
 Hgengamma <- function(x, mu=0, sigma=1, Q)
