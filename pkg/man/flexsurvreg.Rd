@@ -55,7 +55,7 @@ flexsurvreg(formula, data, weights, subset, na.action, dist, inits, fixedpars=NU
     observations to be used in the fit.
   }
   \item{na.action}{a missing-data filter function, applied after any
-    'subset' argument has been used. Default is 'options()$na.action'.
+    'subset' argument has been used. Default is \code{options()$na.action}.
   }
   \item{dist}{ Either one of the following strings identifying a
     built-in distribution:
@@ -119,9 +119,10 @@ flexsurvreg(formula, data, weights, subset, na.action, dist, inits, fixedpars=NU
     likelihood estimates, by default 0.95.
   }
   \item{...}{Optional arguments to the general-purpose \R
-    optimisation routine \code{\link{optim}}. Useful options include
-    \code{method="BFGS"} for using a quasi-Newton optimisation
-    algorithm, which can often be faster than the default Nelder-Mead.
+    optimisation routine \code{\link{optim}}.  For example, the BFGS
+    optimisation algorithm is the default in \code{\link{flexsurvreg}},
+    but this can be changed, for example to \code{method="Nelder-Mead"} which can be
+    more robust to poor initial values.
     If the optimisation fails to converge, consider normalising the
     problem using, for example, \code{control=list(fnscale = 2500)}, for
     example, replacing 2500 by a number of the order of magnitude of the
@@ -139,7 +140,7 @@ flexsurvreg(formula, data, weights, subset, na.action, dist, inits, fixedpars=NU
   Confidence intervals are estimated from the Hessian at the maximum,
   and transformed back to the original scale of the parameters.
 
-  \code{\link{flexsurvreg}} is intended to be as similar as possible to
+  The usage of \code{\link{flexsurvreg}} is intended to be as similar as possible to
   \code{\link[survival]{survreg}} in the \pkg{survival} package.
 }
 \value{

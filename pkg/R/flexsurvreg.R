@@ -200,7 +200,6 @@ flexsurvreg <- function(formula, data, weights, subset, na.action, dist, inits, 
     else Y <- cbind(Y, start=0, stop=Y[,"time"])
 
     dat <- list(Y=Y, X=X, Xraw=m[,-1,drop=FALSE])
-    X <- dat$X
     ncovs <- ncol(dat$Xraw)
     ncoveffs <- ncol(X)
     nbpars <- length(parnames) # number of baseline parameters
@@ -275,7 +274,7 @@ flexsurvreg <- function(formula, data, weights, subset, na.action, dist, inits, 
                     npars=length(est), fixedpars=fixedpars, optpars=setdiff(1:npars, fixedpars),
                     mx=mx, ncovs=ncovs, ncoveffs=ncoveffs, basepars=1:nbpars, covpars=(nbpars+1):npars,
                     loglik=-opt$value, AIC=2*opt$value + 2*length(est), cl=cl, opt=opt,
-                    data = dat, datameans = colMeans(dat$X),
+                    data = dat, datameans = colMeans(dat$X), terms=Terms,
                     N=nrow(dat$Y), events=sum(dat$Y[,"status"]), trisk=sum(dat$Y[,"time"]))
     }
     class(ret) <- "flexsurvreg"

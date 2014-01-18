@@ -1,7 +1,15 @@
 -*- text -*-
 
+Version 0.3 (2014-01-19)
+------------------------
+
+* CRAN release. Includes changes from 0.2.1 to 0.2.3.
+
+
 Version 0.2.3 (2013-10-09)
 -------------------------
+
+* R-forge only release.
 
 * Parameters other than the location parameter can now have covariates
   on them in flexsurvreg.  Thanks to Milan Bouchet-Valat for help with

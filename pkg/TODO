@@ -1,4 +1,8 @@
 more S3 methods as survreg: model.frame, model.matrix, predict, residuals
+model.matrix.default reads data from environment of object
+see survival:::model.matrix.survreg: handle ancillary functions
+check it works within functions
+though survreg stores outcome and linear predictors in object anyway
 
 MLE for Poly-Weibull and other poly-hazard models (make generic flexsurvpoly(base="weibull", ncause)  )
 dpqr for poly-hazard, dpolyhaz(base="weibull", ncause)
