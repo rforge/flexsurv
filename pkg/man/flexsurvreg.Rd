@@ -10,7 +10,8 @@
   function with their own survival distributions.
 }
 \usage{
-flexsurvreg(formula, data, weights, subset, na.action, dist, inits, fixedpars=NULL, cl=0.95,...)
+flexsurvreg(formula, data, weights, subset, na.action, dist, inits,
+            fixedpars=NULL, cl=0.95,...)
 }
 \arguments{
   \item{formula}{
