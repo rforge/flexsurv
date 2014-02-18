@@ -553,11 +553,13 @@ plot.flexsurvreg <- function(x, X=NULL, type="survival", t=NULL, start=NULL,
             }
         }
     }
+    col <- rep(col, length=nrow(X)); lty=rep(lty, length=nrow(X)); lwd=rep(lwd, length=nrow(X))
+    col.ci <- rep(col.ci, length=nrow(X)); lty.ci=rep(lty.ci, length=nrow(X)); lwd.ci=rep(lwd.ci, length=nrow(X))
     for (i in 1:nrow(X)) {
-        if (est) lines(summ[[i]]$t, summ[[i]]$est, col=col, lty=lty, lwd=lwd)
+        if (est) lines(summ[[i]]$t, summ[[i]]$est, col=col[i], lty=lty[i], lwd=lwd[i])
         if (ci) {
-            lines(summ[[i]]$t, summ[[i]]$lcl, col=col.ci, lty=lty.ci, lwd=lwd.ci)
-            lines(summ[[i]]$t, summ[[i]]$ucl, col=col.ci, lty=lty.ci, lwd=lwd.ci)
+            lines(summ[[i]]$t, summ[[i]]$lcl, col=col.ci[i], lty=lty.ci[i], lwd=lwd.ci[i])
+            lines(summ[[i]]$t, summ[[i]]$ucl, col=col.ci[i], lty=lty.ci[i], lwd=lwd.ci[i])
         }
     }
 }

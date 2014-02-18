@@ -160,22 +160,80 @@ minusloglik.stpm <- function(optpars, knots, Y, X=0, weights=weights, inits, fix
     - ( sum(log(dens)*weights[dead]) + sum(log(surv)*weights[!dead]) - sum(log(pobs)*weights))
 }
 
+Slink <- function(scale){
+    switch(scale,
+           hazard=function(x){exp(-exp(x))},
+           odds=function(x){1 / (1 + exp(x))},
+           normal=function(x){pnorm(-x)}
+           )
+}
+
+## cumulative distribution function
+
 psurvspline <- function(q, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
     if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
     match.arg(scale, c("hazard","odds","normal"))
     eta <- basis(knots, log(q)) %*% gamma + as.numeric(X %*% beta) + offset
-    surv <- if (scale=="hazard")  exp(-exp(eta)) else if (scale=="odds") 1 / (1 + exp(eta)) else if (scale=="normal") pnorm(-eta)
+    surv <- Slink(scale)(eta)
     as.numeric(1 - surv)
 }
+
+dlink <- function(scale){
+    switch(scale,
+           hazard=function(x){exp(x - exp(x))},
+           odds=function(x){exp(x) / (1 + exp(x))^2},
+           normal=function(x){dnorm(x)}
+           )
+}
+
+## probability density function
 
 dsurvspline <- function(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
     if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
     match.arg(scale, c("hazard","odds","normal"))
     eta <- basis(knots, log(x)) %*% gamma + as.numeric(X %*% beta) + offset
-    eeta <- if (scale=="hazard") exp(eta - exp(eta)) else if (scale=="odds")  exp(eta) / (1 + exp(eta))^2 else if (scale=="normal") dnorm(eta)
+    eeta <- dlink(scale)(eta)
     dens <- 1 / x * dbasis(knots, log(x)) %*% gamma * eeta
     as.numeric(dens)
 }
+
+Hlink <- function(scale){
+    switch(scale,
+           hazard=function(x){exp(x)},
+           odds=function(x){log1p(exp(x))},
+           normal=function(x){-pnorm(-x, log.p=TRUE)}
+           )
+}
+
+## cumulative hazard function
+
+Hsurvspline <- function(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
+    if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
+    match.arg(scale, c("hazard","odds","normal"))
+    eta <- basis(knots, log(x)) %*% gamma + as.numeric(X %*% beta) + offset
+    as.numeric(Hlink(scale)(eta))
+}
+
+hlink <- function(scale){
+    switch(scale,
+           hazard=function(x){exp(x)},
+           odds=function(x){plogis(x)},
+           normal=function(x){dnorm(-x)/pnorm(-x)}
+           )
+}
+
+## hazard function
+
+hsurvspline <- function(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0){
+    if (length(gamma) != length(knots)) stop("length of gamma should equal number of knots")
+    match.arg(scale, c("hazard","odds","normal"))
+    eta <- basis(knots, log(x)) %*% gamma + as.numeric(X %*% beta) + offset
+    eeta <- hlink(scale)(eta)
+    haz <- 1 / x * dbasis(knots, log(x)) %*% gamma * eeta
+    as.numeric(haz)
+}
+
+
 
 ## TODO can ns from splines package be used for these
 

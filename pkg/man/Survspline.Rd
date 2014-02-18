@@ -1,6 +1,8 @@
 \name{Survspline}
 \alias{dsurvspline}
 \alias{psurvspline}
+\alias{hsurvspline}
+\alias{Hsurvspline}
 \title{Royston/Parmar spline survival distribution}
 \description{
   Probability density and distribution function for the
@@ -9,6 +11,8 @@
 \usage{
 dsurvspline(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0)
 psurvspline(q, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0)
+hsurvspline(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0)
+Hsurvspline(x, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0)
 }
 \arguments{
   \item{x,q}{Vector of times.}
@@ -32,8 +36,9 @@ psurvspline(q, gamma, beta=0, X=0, knots=c(-10,10), scale="hazard", offset=0)
   \item{offset}{An extra constant to add to the linear predictor \eqn{\eta}{eta}.}
 }
 \value{
-\code{dsurvspline} gives the density and \code{psurvspline} gives the distribution
-function, as described in \code{\link{flexsurvspline}}.
+\code{dsurvspline} gives the density, \code{psurvspline} gives the distribution
+function, \code{hsurvspline} gives the hazard and \code{Hsurvspline}
+gives the cumulative hazard, as described in \code{\link{flexsurvspline}}.
 }
 \references{
   Royston, P. and Parmar, M. (2002).  Flexible parametric

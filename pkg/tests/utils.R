@@ -18,8 +18,8 @@ test <- function(x, y) {
 
 ## Generalized F
 
-test(dgenf(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=0, P=1),
-     c(0, 0, 0.353553390593274, 0.140288989252053, 0.067923038519582, 0.038247711235678))
+test(dgenf(c(-1,1,2,3,4), mu=0, sigma=1, Q=0, P=1), # FIXME add limiting value for x=0
+     c(0, 0.353553390593274, 0.140288989252053, 0.067923038519582, 0.038247711235678))
 test(dgenf(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=0, P=0),
      dgengamma(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=0))
 x <- c(-1,0,1,2,3,4); mu <- 2.2; sigma <- 1.6; Q <- 0.2; P <- 1.2
@@ -27,7 +27,6 @@ delta <- (Q^2 + 2*P)^{1/2}
 s1 <- 2 / (Q^2 + 2*P + Q*delta); s2 <- 2 / (Q^2 + 2*P - Q*delta)
 test(dgenf(x, mu=mu, sigma=sigma, Q=Q, P=P),
      dgenf.orig(x, mu=mu, sigma=sigma/delta, s1=s1, s2=s2))
-
 test(dgenf(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=c(0,1,2), P=0),
      dgengamma(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=c(0,1,2)))
 
@@ -81,8 +80,8 @@ if (interactive())  {
 
 ## Generalized gamma
 
-test(dgengamma(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=1),
-     c(0, 0, 0.367879441171442, 0.135335283236613, 0.0497870683678639, 0.0183156388887342))
+test(dgengamma(c(-1,1,2,3,4), mu=0, sigma=1, Q=1),  # FIXME value for x=0 and add here
+     c(0, 0.367879441171442, 0.135335283236613, 0.0497870683678639, 0.0183156388887342))
 test(dgengamma(c(-1,0,1,2,3,4), mu=0, sigma=1, Q=0),
      dlnorm(c(-1,0,1,2,3,4), meanlog=0, sdlog=1))
 test(dgengamma(c(-1,0,1,2,3,4), mu=0, sigma=1:3, Q=0),
@@ -94,7 +93,9 @@ test(dgengamma(c(1,2,3,4), mu=0.1, sigma=1.2, Q=1),
 x <- c(1,2,3,4); mu <- 0.4; sigma <- 1.2
 test(dgengamma(x, mu=mu, sigma=sigma, Q=sigma),
      dgamma(x, shape=1/sigma^2, scale=exp(mu)*sigma^2))
-x <- c(-1,0,1,2,3,4); shape <- 2.2; scale <- 1.6; k <- 1.9
+
+x <- c(-1,1,2,3,4); shape <- 2.2; scale <- 1.6; k <- 1.9
+# FIXME add limiting value for x=0
 test(dgengamma.orig(x, shape=shape, scale=scale, k=k),
      dgengamma(x, mu=log(scale) + log(k)/shape, sigma=1/(shape*sqrt(k)), Q=1/sqrt(k)))
 
@@ -132,8 +133,9 @@ test(x, y)
 
 ## Generalised F (original)
 
-test(dgenf.orig(c(-1,0,1,2,3,4), mu=0, sigma=1, s1=1, s2=1),
-     c(0, 0, 0.25, 0.111111111111111, 0.0625, 0.04))
+## FIXME add value for x=0
+test(dgenf.orig(c(-1,1,2,3,4), mu=0, sigma=1, s1=1, s2=1),
+     c(0, 0.25, 0.111111111111111, 0.0625, 0.04))
 x <- c(-1,0,1,2,3,4); mu <- 0.1; sigma <- 1.2; s1 <- 1.7; s2 <- 10000000
 dgenf.orig(x, mu=mu, sigma=sigma, s1=s1, s2=s2)
 dgengamma.orig(x, shape=1/sigma, scale=exp(mu) / s1^sigma, k=s1) # equal for large s2
@@ -253,6 +255,7 @@ x <- c(0.5, 1.06, 4.7)
 test(x, qgompertz(pgompertz(x, shape=0.1, rate=0.2), shape=0.1, rate=0.2))
 q <- numeric(3); for (i in 1:3) q[i] <- qgompertz(x[i], shape=-0.0001, rate=i/5)
 test(q, qgompertz(x, shape=-0.0001, rate=1:3/5))
+qgompertz(p=c(-1, 0, 1, 2), 1, 1)
 
 if (interactive()) {
     plot(density(rgompertz(10000, shape=0.1, rate=0.2)))
@@ -272,7 +275,10 @@ rgompertz(1, shape=shape, rate=1)
 rgompertz(1, shape=shape, rate=2)
 rgompertz(1, shape=shape, rate=3)
 rgompertz(1, shape=shape, rate=4)
-
+rgompertz(1:2, shape=1, rate=1)
+rgompertz(3, shape=c(1,NaN, NA), rate=1)
+rgompertz(3, shape=c(NaN), rate=1)
+rgompertz(4, shape=c(1,NA), rate=1)
 
 
 
@@ -292,3 +298,54 @@ test(d1, d2)
 p1 <- plnorm(1, meanlog, sdlog)
 p2 <- psurvspline(1, gamma = c(-meanlog/sdlog, 1/sdlog), scale="normal")
 test(p1, p2)
+# TODO document 
+#H1 <- Hlnorm(1, meanlog, sdlog)
+#H2 <- Hsurvspline(1, gamma = c(-meanlog/sdlog, 1/sdlog), scale="normal")
+#test(H1, H2)
+g <- c(0.1, 0.2, 0.3); k <- c(2,3,4)
+test(dsurvspline(1,g,knots=k)/(1 - psurvspline(1,g,knots=k)),  hsurvspline(1,g,knots=k))
+test(dsurvspline(1,g,knots=k,scale="odds")/(1 - psurvspline(1,g,knots=k,scale="odds")),  hsurvspline(1,g,knots=k,scale="odds"))
+test(dsurvspline(1,g,knots=k,scale="normal")/(1 - psurvspline(1,g,knots=k,scale="normal")),  hsurvspline(1,g,knots=k,scale="normal"))
+test(-log(1 - psurvspline(0.2,g,knots=k)), Hsurvspline(0.2,g,knots=k))
+test(-log(1 - psurvspline(0.2,g,knots=k,scale="odds")), Hsurvspline(0.2,g,knots=k,scale="odds"))
+test(-log(1 - psurvspline(0.2,g,knots=k,scale="normal")), Hsurvspline(0.2,g,knots=k,scale="normal"))
+
+
+## Hazards
+
+## Different x
+test(hexp(c(-Inf, NaN, Inf, NA, -1, 0, 1), c(1,2,3)), c(0,NaN,3,NA,0,3,1))
+test(hexp(c(-Inf, NaN, Inf, NA, -1, 0, 1), c(1,2,3), log=TRUE), log(c(0,NaN,3,NA,0,3,1)))
+## Different rates
+test(Hexp(c(-Inf, NaN, Inf,  NA, -1, 0,  1, 2, 4), c(1,2,3)), c(0,NaN,Inf, NA,0,0, 1, 4, 12))
+test(Hexp(c(-Inf, NaN, Inf,  NA, -1, 0,  1, 2, 4), c(1,2,3), log=TRUE), log(c(0,NaN,Inf, NA,0,0, 1, 4, 12)))
+## Hazard def
+test(dexp(c(1,2,3), c(2,3,4)) / (1 - pexp(c(1,2,3), c(2,3,4))), hexp(c(1,2,3), c(2,3,4)))
+test(-log(1 - pexp(c(1,2,3), c(2,3,4))), Hexp(c(1,2,3), c(2,3,4)))
+test(log(-log(1 - pexp(c(1,2,3), c(2,3,4)))), Hexp(c(1,2,3), c(2,3,4), log=TRUE))
+## warnings
+hexp(c(1,1,1), c(-1, 0, 2))
+dexp(c(1,1,1), c(-1, 0, 2))
+
+### Weibull
+test(hweibull(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3)), 
+     dweibull(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3)) / (1 - pweibull(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3))))
+test(Hweibull(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3)),
+     -pweibull(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3), lower.tail=FALSE, log.p=TRUE))
+## exponential reduction
+test(hweibull(c(-Inf, NaN, Inf, NA, -1, 0, 1), c(1,1,1), c(1,2,3)), c(0,NaN,1/3,NA,0,1/3,1))
+### positive shape, increasing 
+hweibull(c(-Inf, -1, 0, 1, 2, Inf), 2, 2.5)
+### neg shape, decreasing 
+hweibull(c(-Inf, -1, 0, 1, 2, Inf), 0.5, 1)
+test(Hexp(c(-Inf, NaN, Inf,  NA, -1, 0,  1, 2, 4), c(1,2,3)), c(0,NaN,Inf, NA,0,0, 1, 4, 12))
+
+## Gompertz
+test(hgompertz(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3)),
+     dgompertz(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3)) / (1 - pgompertz(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3))))
+test(Hgompertz(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3)), 
+     -pgompertz(c(1,1,1,1), c(1,1,2,2), c(1,3,1,3), lower.tail=FALSE, log.p=TRUE))
+## reduction to exponential
+test(hgompertz(c(2,4), c(0,0), c(2,2)), hexp(c(2,4), c(2,2)))
+test(Hgompertz(c(2,4), c(0,0), c(2,2)), Hexp(c(2,4), c(2,2)))
+

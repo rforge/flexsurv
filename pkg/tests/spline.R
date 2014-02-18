@@ -29,13 +29,13 @@ summary(spl, type="survival", B=10)
 summary(spl, type="cumhaz", B=10)
 summary(spl, type="hazard", B=10)
 if (interactive()){
-    plot(spl)
+    plot(spl, col=c("red","blue","green"))
     plot(spl, ci=TRUE, B=40)
     plot(spl, type="cumhaz")
     plot(spl, type="hazard")
     plot(spl, type="hazard", ci=TRUE, B=40)
 }
-
+       
 ## Weibull, no covs
 spl <- flexsurvspline(Surv(recyrs, censrec) ~ 1, data=bc, k=0)
 if (interactive()){

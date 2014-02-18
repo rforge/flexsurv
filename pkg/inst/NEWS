@@ -1,5 +1,19 @@
 -*- text -*-
 
+Version 0.3.1 (2014-02-14)
+--------------------------
+
+* R-forge only release.
+
+* Distribution functions tidied up, making special value handling and
+  vectorisation consistent. Hazard and cumulative hazard functions for
+  all supported distributions.
+
+* Vectors of different col, lwd and lty can be passed to
+  plot.flexsurvreg for multiple fitted lines.  Thanks to Julia
+  Sandberg for the report.
+
+
 Version 0.3 (2014-01-19)
 ------------------------
 
